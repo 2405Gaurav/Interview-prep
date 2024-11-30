@@ -1,0 +1,5 @@
+export const NOSE_ALLIGNMENT_THRESHOLD_ANGLE = 25;
+export const CHEEK_ANGLE_THRESHOLD = 0.8;
+export const EYE_ANGLE_THRESHOLD = 0.85;
+export const IRIS_FRAME_THRESHOLD = 0.15;
+export const CLOSED_EYE_RATIO_THRESHOLD = 0.2;
