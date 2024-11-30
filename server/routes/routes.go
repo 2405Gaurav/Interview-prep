@@ -11,6 +11,7 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/v1/session", controllers.CreateSession).Methods("POST")
 	router.HandleFunc("/api/v1/ask-to-gemini/{sessionId}", controllers.AskToGemini).Methods("POST")
 	router.HandleFunc("/api/v1/end/{sessionId}", controllers.EndSession).Methods("POST")
+	router.HandleFunc("/api/v1/health", controllers.HealthCheck).Methods("GET")
 
 	return router
 }
