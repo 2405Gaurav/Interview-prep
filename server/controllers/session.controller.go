@@ -24,11 +24,12 @@ var SessionCollection *mongo.Collection
 
 func init() {
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if os.Getenv("DB_NAME") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
-
 	colName := os.Getenv("SESSION_COLLECTION_NAME")
 
 	SessionCollection = db.ConnectToDb(colName)

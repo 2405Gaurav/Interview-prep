@@ -19,9 +19,11 @@ import (
 var QuestionCollection *mongo.Collection
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if os.Getenv("DB_NAME") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	colName := os.Getenv("QUESTION_COLLECTION_NAME")
@@ -56,7 +58,7 @@ func UpdateQuestion(question string, rating string, review string, sessionIdStr 
 	// Conditionally add push operations
 	if question != "" || rating != "" || review != "" {
 		updateFields["$push"] = bson.M{}
-		
+
 		if question != "" {
 			updateFields["$push"].(bson.M)["question"] = question
 		}

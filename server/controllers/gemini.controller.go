@@ -25,9 +25,11 @@ var model *genai.GenerativeModel
 var client *genai.Client
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	if os.Getenv("DB_NAME") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		}
 	}
 
 	ctx := context.Background()
@@ -57,25 +59,25 @@ func parseGeminiResponse(responseJSON []byte) (*models.GeminniResponse, error) {
 
 // Rating , Feedback, Question
 func extractPartsFromGeminiResponse(response string) (models.ExtractedResponse, error) {
-    result := models.ExtractedResponse{}
+	result := models.ExtractedResponse{}
 
-    // Extract Rating
-    ratingMatch := regexp.MustCompile(`<Rating>(.*?)</Rating>`)
-    if matches := ratingMatch.FindStringSubmatch(response); len(matches) > 1 {
-        result.Rating = matches[1]
-    }
+	// Extract Rating
+	ratingMatch := regexp.MustCompile(`<Rating>(.*?)</Rating>`)
+	if matches := ratingMatch.FindStringSubmatch(response); len(matches) > 1 {
+		result.Rating = matches[1]
+	}
 
-    // Extract Feedback
-    feedbackMatch := regexp.MustCompile(`<Feedback>(.*?)</Feedback>`)
-    if matches := feedbackMatch.FindStringSubmatch(response); len(matches) > 1 {
-        result.Feedback = matches[1]
-    }
+	// Extract Feedback
+	feedbackMatch := regexp.MustCompile(`<Feedback>(.*?)</Feedback>`)
+	if matches := feedbackMatch.FindStringSubmatch(response); len(matches) > 1 {
+		result.Feedback = matches[1]
+	}
 
-    // Extract Question
-    questionMatch := regexp.MustCompile(`<Question>(.*?)</Question>`)
-    if matches := questionMatch.FindStringSubmatch(response); len(matches) > 1 {
-        result.Question = matches[1]
-    }
+	// Extract Question
+	questionMatch := regexp.MustCompile(`<Question>(.*?)</Question>`)
+	if matches := questionMatch.FindStringSubmatch(response); len(matches) > 1 {
+		result.Question = matches[1]
+	}
 
 	return result, nil
 }
@@ -178,7 +180,7 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 
 	// Update the session status
 	if session.InterviewStatus == models.NotStarted {
-		_, err = UpdateSession(sessionId, 
+		_, err = UpdateSession(sessionId,
 			bson.M{
 				"interviewstatus": "waiting-for-answer",
 			},
@@ -206,7 +208,7 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		_, err = UpdateQuestion(extractedResponseInParts.Question, extractedResponseInParts.Rating, extractedResponseInParts.Feedback, sessionId) 
+		_, err = UpdateQuestion(extractedResponseInParts.Question, extractedResponseInParts.Rating, extractedResponseInParts.Feedback, sessionId)
 		if err != nil {
 			utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to update question")
 			return
