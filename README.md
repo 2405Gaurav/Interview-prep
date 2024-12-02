@@ -58,15 +58,25 @@
     git clone https://github.com/rnkp755/techPrepAI.git
     cd techPrepAI
     ```
-2. Run the backend server:
+2. Create `.env` file in the `server` directory and add the following variables:
+    ```
+    PORT =
+    MONGODB_URI = ""
+    DB_NAME = ""
+    SESSION_COLLECTION_NAME = ""
+    QUESTION_COLLECTION_NAME = ""
+    GEMINI_API_KEY = ""
+    FRONTEND_URL = "http://localhost:5173"
+    ```
+3. Run the backend server:
     ```bash
       cd server
       go run main.go
     ```
-3. Install dependencies for the frontend:
+4. Install dependencies for the frontend:
     ```bash
       cd ../client
       npm install
       npm run dev
     ```
-4. Access the application in your browser at `http://localhost:5173`.
+5. Access the application in your browser at `http://localhost:5173`.
