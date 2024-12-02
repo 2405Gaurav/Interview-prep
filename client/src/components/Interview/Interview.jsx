@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { SERVER } from "@/constant.js";
+import { LOCAL_SERVER } from "@/constant.js";
 import { Toaster } from "sonner";
 import { mediapipeResponse } from "@/components/Camera/mediapipeResponse.js";
 import Interviewer from "@/assets/interviewer_1.mp4";
@@ -11,6 +11,8 @@ import ShinyButton from "@/components/magicui/shiny-button";
 import TypingAnimation from "@/components/magicui/typing-animation";
 
 const Interview = () => {
+    const SERVER = import.meta.env.VITE_SERVER || LOCAL_SERVER;
+
     const [gettingGeminiResponse, setGettingGeminiResponse] = useState(false);
     const [geminiResponse, setGeminiResponse] = useState(
         "Looking for a response..."
@@ -26,7 +28,6 @@ const Interview = () => {
     const [hasCodeChanged, setHasCodeChanged] = useState(false);
 
     const navigate = useNavigate();
-    const hasFetchedRef = useRef(false);
 
     const fetchGeminiResponse = async () => {
         // if (hasFetchedRef.current) return;
@@ -106,7 +107,7 @@ const Interview = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center bg-gray-800 text-white px-4">
+        <div className="min-h-screen flex flex-col items-center bg-gray-800 text-white px-4 pt-20">
             {/* API Response Section */}
             <div className="w-full max-h-24 overflow-y-auto bg-gray-900 p-4 rounded-md mb-4 text-left text-base">
                 {!gettingGeminiResponse &&
@@ -136,8 +137,8 @@ const Interview = () => {
                     {/* Video Section */}
                     <div
                         className={`flex-col items-center justify-center ${
-                            ideEnabled ? "w-full" : "w-1/2"
-                        } bg-gray-700 rounded-lg p-4`}
+                            ideEnabled ? "w-full py-4" : "w-1/2 py-8 h-[70vh]"
+                        } bg-gray-700 rounded-lg px-4 `}
                     >
                         {interviewerStatus !== "waiting" ? (
                             <>
@@ -172,8 +173,8 @@ const Interview = () => {
                     {/* Camera Section */}
                     <div
                         className={`flex flex-col items-center justify-center ${
-                            ideEnabled ? "w-full mt-4" : "w-1/2"
-                        } bg-gray-700 rounded-lg px-4 py-0`}
+                            ideEnabled ? "w-full mt-4" : "max-w-1/2 h-[70vh]"
+                        } bg-gray-700 rounded-lg px-4 py-0 flex-grow `}
                     >
                         <Camera
                             cameraStatus={cameraStatus}

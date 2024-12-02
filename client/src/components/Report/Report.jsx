@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -9,13 +9,18 @@ import {
     Clock,
     Timer,
     CircleHelp,
+    Download,
 } from "lucide-react";
 import { ProjectCard } from "./ProjectCart";
 import { QuestionCard } from "./QuestionCard";
 import axios from "axios";
-import { SERVER } from "@/constant.js";
+import { LOCAL_SERVER } from "@/constant.js";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 const Report = () => {
+    const SERVER = import.meta.env.VITE_SERVER || LOCAL_SERVER;
+
     const [fetching, setFetching] = useState(false);
     const [report, setReport] = useState({
         name: "",
@@ -38,6 +43,23 @@ const Report = () => {
     });
 
     const navigate = useNavigate();
+    const ReportRef = useRef();
+
+    const downloadPDF = async () => {
+        const element = ReportRef.current;
+
+        // Capture the component as an image
+        const canvas = await html2canvas(element, { scale: 2 });
+        const imgData = canvas.toDataURL("image/png");
+
+        // Create a PDF and add the captured image
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`${report.name || localStorage.getItem("_id")}_report.pdf`);
+    };
 
     function parseReviews(reviews) {
         return reviews.map((review) => {
@@ -146,7 +168,10 @@ const Report = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div
+            className="min-h-screen bg-gray-900 text-white p-8"
+            ref={ReportRef}
+        >
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -245,6 +270,13 @@ const Report = () => {
                         ))}
                     </div>
                 </section>
+                <div
+                    className="fixed bottom-5 right-5 flex items-center justify-center w-12 h-12 text-gray-500 bg-blue-500 rounded-full shadow-lg cursor-pointer"
+                    role="action"
+                    onClick={downloadPDF}
+                >
+                    <Download className="w-6 h-6 text-white" />
+                </div>
             </motion.div>
         </div>
     );

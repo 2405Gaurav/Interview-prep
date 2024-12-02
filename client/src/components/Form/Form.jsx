@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import {
-    ChevronDownIcon,
-    PencilIcon,
-    TrashIcon,
-} from "@heroicons/react/16/solid";
+import { CircleChevronDown, Pencil, TrashIcon } from "lucide-react";
 import StackIcons from "./StackIcons";
 import ProjectForm from "./ProjectForm";
 import DeleteDialog from "./DeleteDialog";
@@ -17,7 +13,7 @@ import {
     ComboboxOptions,
 } from "@headlessui/react";
 import { TechStackNames } from "./StackIcons";
-import { SERVER } from "@/constant.js";
+import { LOCAL_SERVER } from "@/constant.js";
 import axios from "axios";
 import { Toaster, toast } from "sonner";
 
@@ -48,6 +44,8 @@ class Details {
     }
 }
 const Form = () => {
+    const SERVER = import.meta.env.VITE_SERVER || LOCAL_SERVER;
+
     const [details, setDetails] = useState(new Details());
 
     const [projectForms, setProjectForms] = useState([{ id: 1 }]);
@@ -71,6 +69,15 @@ const Form = () => {
             Projects: details.projects,
         };
         console.log(payload);
+        if (
+            payload.Name.trim() === "" ||
+            payload.TechStacks.length === 0 ||
+            payload.Experience.trim() === "" ||
+            payload.Projects.length === 0
+        ) {
+            toast.error("Please fill all the fields!");
+            return;
+        }
 
         axios
             .post(`${SERVER}/api/v1/session`, payload)
@@ -81,6 +88,7 @@ const Form = () => {
             })
             .catch(function (error) {
                 console.log(error);
+                toast.error(error.response.data.message);
             });
     };
 
@@ -110,7 +118,7 @@ const Form = () => {
               });
 
     return (
-        <div className="bg-[#111826] pb-4">
+        <div className="bg-[#111826] pt-16 pb-4">
             {message &&
                 toast["error"](message, {
                     action: {
@@ -327,7 +335,7 @@ const Form = () => {
                                     <Menu>
                                         <MenuButton className="inline-flex items-center gap-2 rounded-md bg-[#111826] py-1.5 px-3 text-sm/6 font-semibold text-white shadow-inner shadow-white/10 focus:outline-none data-[hover]:bg-[#111826]/6 data-[open]:bg-[#1E2A47] data-[focus]:outline-1 data-[focus]:outline-white">
                                             Options
-                                            <ChevronDownIcon className="size-4 fill-white/60" />
+                                            <CircleChevronDown className="size-4 fill-white/60" />
                                         </MenuButton>
                                         <MenuItems
                                             transition
@@ -341,7 +349,7 @@ const Form = () => {
                                                         setOpenEditDialog(true)
                                                     }
                                                 >
-                                                    <PencilIcon className="size-4 fill-white/30" />
+                                                    <Pencil className="size-4 fill-white/30" />
                                                     Edit
                                                 </button>
                                             </MenuItem>
