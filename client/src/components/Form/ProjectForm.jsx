@@ -72,7 +72,7 @@ const ProjectForm = (props) => {
                 },
                 style: {
                     border: "2px solid #708090",
-                    background: "#6082B6",
+                    background: "#9ab3d9",
                 },
             });
         } catch (error) {

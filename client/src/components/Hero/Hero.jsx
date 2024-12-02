@@ -65,7 +65,7 @@ const Hero = () => {
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors"
+                                className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-gray-600 text-gray-300 hover:text-white hover:border-gray-500 transition-colors cursor-not-allowed"
                             >
                                 Sign In
                             </motion.button>

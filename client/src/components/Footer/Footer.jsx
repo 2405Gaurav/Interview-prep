@@ -7,22 +7,22 @@ const Footer = () => {
     const socialLinks = [
         {
             icon: Linkedin,
-            href: "https://www.linkedin.com/in/raushan",
+            href: "https://www.linkedin.com/in/rnkp755/",
             ariaLabel: "LinkedIn Profile",
         },
         {
             icon: Github,
-            href: "https://github.com/raushan",
+            href: "https://github.com/rnkp755",
             ariaLabel: "GitHub Profile",
         },
         {
             icon: Instagram,
-            href: "https://www.instagram.com/raushan",
+            href: "https://www.instagram.com/rnkp755/",
             ariaLabel: "Instagram Profile",
         },
         {
             icon: Globe,
-            href: "https://www.raushan.dev",
+            href: "https://www.raushan.info/",
             ariaLabel: "Personal Website",
         },
     ];

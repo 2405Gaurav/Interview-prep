@@ -86,7 +86,7 @@ const Navbar = () => {
                             {item.name}
                         </NavLink>
                     ))}
-                    <ButtonGlow className="w-full mt-4">Sign In</ButtonGlow>
+                    <ButtonGlow className="w-full mt-4 ">Sign In</ButtonGlow>
                 </div>
             </motion.div>
         </nav>
