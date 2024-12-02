@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { LOCAL_SERVER } from "@/constant.js";
@@ -8,11 +8,13 @@ import Interviewer from "@/assets/interviewer_1.mp4";
 import Camera from "../Camera/Camera.jsx";
 import { MicroPhone, Speaker, Ide } from "..";
 import ShinyButton from "@/components/magicui/shiny-button";
-import TypingAnimation from "@/components/magicui/typing-animation";
 
 const Interview = () => {
-    const SERVER = import.meta.env.VITE_SERVER || LOCAL_SERVER;
-
+    const SERVER = useMemo(
+        () => import.meta.env.VITE_SERVER || LOCAL_SERVER,
+        []
+    );
+    const videoRef = useRef(null);
     const [gettingGeminiResponse, setGettingGeminiResponse] = useState(false);
     const [geminiResponse, setGeminiResponse] = useState(
         "Looking for a response..."
@@ -100,6 +102,18 @@ const Interview = () => {
         }
     }, [speakerStatus]);
 
+    useEffect(() => {
+        const video = videoRef.current;
+
+        if (video) {
+            if (interviewerStatus === "speaking") {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+    }, [interviewerStatus]);
+
     const handleSubmit = async () => {
         setInterviewerStatus("analyzing");
         await fetchGeminiResponse();
@@ -107,22 +121,14 @@ const Interview = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center bg-gray-800 text-white px-4 pt-20">
+        <div className="min-h-screen flex flex-col items-center bg-gray-800 text-white px-4 pt-20 pb-12">
             {/* API Response Section */}
             <div className="w-full max-h-24 overflow-y-auto bg-gray-900 p-4 rounded-md mb-4 text-left text-base">
                 {!gettingGeminiResponse &&
                 geminiResponse !== "Looking for a response..." ? (
-                    <TypingAnimation
-                        text={geminiResponse}
-                        duration={20}
-                        className="text-left text-base"
-                    />
+                    <p>{geminiResponse}</p>
                 ) : (
-                    <TypingAnimation
-                        text={"Fetching Gemini Response..."}
-                        duration={20}
-                        className="text-left text-base"
-                    />
+                    <p>Fetching Gemini Response...</p>
                 )}
                 <Toaster position="bottom-right" richColors />
             </div>
@@ -143,10 +149,9 @@ const Interview = () => {
                         {interviewerStatus !== "waiting" ? (
                             <>
                                 <video
+                                    ref={videoRef}
                                     className="w-full rounded-md"
                                     src={Interviewer}
-                                    autoPlay
-                                    loop
                                     preload="metadata"
                                     muted
                                 />
