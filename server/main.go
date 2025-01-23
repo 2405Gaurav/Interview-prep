@@ -33,10 +33,10 @@ func main() {
 
 	// Configure CORS options
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL"), "http://another-domain.com"}, // Add your allowed origins here
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},                         // Add your allowed methods here
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},                        // Add your allowed headers here
-		AllowCredentials: true,                                                             // Set to true if you need to send cookies
+		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL_DEVELOPMENT"), os.Getenv("FRONTEND_URL_PRODUCTION_ONE"), os.Getenv("FRONTEND_URL_PRODUCTION_TWO")}, // Add your allowed origins here
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},                                                                                            // Add your allowed methods here
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},                                                                                           // Add your allowed headers here
+		AllowCredentials: true,                                                                                                                                // Set to true if you need to send cookies
 	})
 
 	// Wrap router with CORS middleware
