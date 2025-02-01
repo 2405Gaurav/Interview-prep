@@ -1,7 +1,5 @@
 import React, { useRef, useEffect, useCallback } from "react";
 import Webcam from "react-webcam";
-import * as cam from "@mediapipe/camera_utils";
-import { drawConnectors } from "@mediapipe/drawing_utils";
 import { detectUnfairMeans } from "./mediapipe.js";
 import { mediapipeResponse } from "./mediapipeResponse.js";
 import throttle from "lodash.throttle";
