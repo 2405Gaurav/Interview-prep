@@ -47,9 +47,7 @@ const CameraContainer = () => {
 				</Link>
 			) : (
 				<p className="text-center text-slate-200 text-base mx-auto my-2 flex items-center justify-center ">
-					Please check your camera and make sure it is
-					working Properly or please wait to load everything
-					for you.
+					Loading mediapipe may take some time. Please wait. Recommended Browser: Chrome / Edge
 				</p>
 			)}
 		</div>

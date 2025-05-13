@@ -200,9 +200,6 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	fmt.Println("Gemini response:", extractedResponseInParts)
-
 	w.Header().Set("Content-Type", "application/json")
 	utils.SuccessResponse(w, "Gemini response retrieved successfully", map[string]interface{}{
 		"question": extractedResponseInParts.Question,
