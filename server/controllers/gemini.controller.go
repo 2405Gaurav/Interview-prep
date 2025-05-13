@@ -44,7 +44,7 @@ func init() {
 		log.Fatal(errClient)
 	}
 
-	model = client.GenerativeModel("gemini-1.5-pro")
+	model = client.GenerativeModel("gemini-2.0-flash")
 }
 
 func parseGeminiResponse(responseJSON []byte) (*models.GeminniResponse, error) {
@@ -77,6 +77,11 @@ func extractPartsFromGeminiResponse(response string) (models.ExtractedResponse, 
 	questionMatch := regexp.MustCompile(`<Question>(.*?)</Question>`)
 	if matches := questionMatch.FindStringSubmatch(response); len(matches) > 1 {
 		result.Question = matches[1]
+	}
+
+	codeMatch := regexp.MustCompile(`<Code>(.*?)</Code>`)
+	if matches := codeMatch.FindStringSubmatch(response); len(matches) > 1 {
+		result.Code = matches[1]
 	}
 
 	return result, nil
@@ -133,25 +138,6 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := context.Background()
-
-	/*
-		f, err := os.Open("image.png")
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error opening file: %v", err), http.StatusInternalServerError)
-			return
-		}
-		defer f.Close()
-
-		file, err := client.UploadFile(ctx, "", f, nil)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error uploading file: %v", err), http.StatusInternalServerError)
-			return
-		}
-
-		resp, err := model.GenerateContent(ctx, genai.Text(prompt), genai.FileData{URI: file.URI})
-
-	*/
-
 	resp, err := model.GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Error generating content: %v", err))
@@ -196,7 +182,7 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 		question := models.Question{
 			ID:        primitive.NewObjectID(),
 			SessionId: session.ID,
-			Question:  []string{extractedResponseInParts.Question},
+			Question:  []string{extractedResponseInParts.Question + "```" + extractedResponseInParts.Code + "```"},
 			Rating:    []string{},
 			Review:    []string{},
 			CreatedAt: time.Now(),
@@ -208,13 +194,18 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		_, err = UpdateQuestion(extractedResponseInParts.Question, extractedResponseInParts.Rating, extractedResponseInParts.Feedback, sessionId)
+		_, err = UpdateQuestion(extractedResponseInParts.Question + "```" + extractedResponseInParts.Code + "```", extractedResponseInParts.Rating, extractedResponseInParts.Feedback, sessionId)
 		if err != nil {
 			utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to update question")
 			return
 		}
 	}
 
+	fmt.Println("Gemini response:", extractedResponseInParts)
+
 	w.Header().Set("Content-Type", "application/json")
-	utils.SuccessResponse(w, "Gemini response retrieved successfully", extractedResponseInParts.Question)
+	utils.SuccessResponse(w, "Gemini response retrieved successfully", map[string]interface{}{
+		"question": extractedResponseInParts.Question,
+		"code":     extractedResponseInParts.Code,
+	})
 }

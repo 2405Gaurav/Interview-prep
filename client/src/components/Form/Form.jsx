@@ -63,7 +63,6 @@ const Form = () => {
 
 	const handleFormSubmit = (e) => {
 		e.preventDefault();
-		setIsSubmitting(true);
 		const payload = {
 			UserType: details.userType,
 			Name: details.name,
@@ -81,7 +80,7 @@ const Form = () => {
 			toast.error("Please fill all the fields!");
 			return;
 		}
-
+		setIsSubmitting(true);
 		axios.post(`${SERVER}/api/v1/session`, payload)
 			.then(function (response) {
 				console.log(response);
@@ -347,7 +346,7 @@ const Form = () => {
 						{details.projects.map((project) => (
 							<div key={project.id}>
 								<div className="flex items-center justify-between bg-[#1E2A47] rounded-md mt-5 px-2 py-1 gap-2">
-									<div className="flex-cols max-w-[85%]">
+									<div className="flex-col w-[90%] pr-2">
 										<p className="text-slate-200 truncate">
 											<span className="font-bold text-transparent bg-clip-text bg-gradient-to-r to-emerald-500 from-sky-400">
 												{
@@ -389,7 +388,8 @@ const Form = () => {
 											)}
 										</legend>
 									</div>
-									<Menu>
+									<div className="w-[10%] flex justify-end">
+									<Menu as="div">
 										<MenuButton className="inline-flex items-center gap-2 rounded-md bg-[#111826] py-1.5 px-3 text-sm/6 font-semibold text-white shadow-inner shadow-white/10 focus:outline-none data-[hover]:bg-[#111826]/6 data-[open]:bg-[#1E2A47] data-[focus]:outline-1 data-[focus]:outline-white">
 											Options
 											<CircleChevronDown className="size-4 fill-white/10" />
@@ -427,7 +427,8 @@ const Form = () => {
 												</button>
 											</MenuItem>
 										</MenuItems>
-									</Menu>
+										</Menu>
+									</div>
 									<DeleteDialog
 										openDeleteDialog={
 											openDeleteDialog

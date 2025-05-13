@@ -71,7 +71,11 @@ const Interview = () => {
             );
             console.log(response.data?.data);
             const msg = response.data?.data || "Error fetching Gemini Response";
-            setGeminiResponse(msg);
+            setGeminiResponse(msg.question);
+            if (msg.code) {
+                setCode(msg.code);
+                setIdeEnabled(true);
+            }
             setInterviewerStatus("speaking");
         } catch (error) {
             setGeminiResponse(
@@ -83,6 +87,7 @@ const Interview = () => {
     };
 
     const endInterview = async () => {
+        localStorage.removeItem("_id");
         navigate("/report", {
             state: {
                 message:

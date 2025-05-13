@@ -1,7 +1,4 @@
-import React, { useEffect } from "react";
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
+import React, { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, RotateCcw } from "lucide-react";
 
 const MicroPhone = (props) => {
@@ -11,35 +8,97 @@ const MicroPhone = (props) => {
     setInterviewerStatus = null,
   } = props;
 
-  // Get the necessary functions and state from the useSpeechRecognition hook
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
+  const [listening, setListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+  const [browserSupport, setBrowserSupport] = useState(true);
+  
+  const recognitionRef = useRef(null);
 
-  // Ensure microphone permissions are properly set and handling errors
+  // Initialize speech recognition on component mount
   useEffect(() => {
-    if (!browserSupportsSpeechRecognition) {
+    // Check browser support
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
       console.warn("Browser doesn't support speech recognition.");
+      setBrowserSupport(false);
+      return;
     }
-  }, [browserSupportsSpeechRecognition]);
 
+    // Create recognition instance
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognitionRef.current = new SpeechRecognition();
+    
+    // Configure recognition
+    recognitionRef.current.continuous = true;
+    recognitionRef.current.interimResults = true;
+    recognitionRef.current.lang = 'en-US';
+
+    // Set up event handlers
+    recognitionRef.current.onstart = () => {
+      setListening(true);
+      console.log("Listening started...");
+    };
+
+    recognitionRef.current.onend = () => {
+      setListening(false);
+      console.log("Listening stopped...");
+    };
+
+    recognitionRef.current.onresult = (event) => {
+      let finalTranscript = '';
+      
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript + ' ';
+        }
+      }
+      
+      if (finalTranscript) {
+        setTranscript(prev => prev + finalTranscript);
+      }
+    };
+
+    recognitionRef.current.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+    };
+
+    // Clean up on unmount
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  // Update parent component with transcript when it changes
   useEffect(() => {
     if (setUserTranscript) {
       setUserTranscript(transcript);
     }
-  }, [transcript]);
+  }, [transcript, setUserTranscript]);
 
-  // Start the speech recognition with continuous listening mode
   const startListening = () => {
-    SpeechRecognition.startListening({ continuous: true });
-    console.log("Listening started...");
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start();
+      } catch (error) {
+        // Handle the case where recognition is already started
+        console.error("Error starting recognition:", error);
+      }
+    }
   };
 
-  // Ensure the microphone support check is done
-  if (!browserSupportsSpeechRecognition) {
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  };
+
+  const resetTranscript = () => {
+    setTranscript("");
+  };
+
+  if (!browserSupport) {
     return <span>Browser doesn't support speech recognition.</span>;
   }
 
@@ -53,10 +112,7 @@ const MicroPhone = (props) => {
               <Mic
                 size={iconSize}
                 color="#ffffff"
-                onClick={() => {
-                  SpeechRecognition.stopListening();
-                  console.log("Listening stopped...");
-                }}
+                onClick={stopListening}
               />
             ) : (
               <MicOff
@@ -66,7 +122,6 @@ const MicroPhone = (props) => {
               />
             )}
           </div>
-
           {/* Reset the transcript */}
           <div
             onClick={resetTranscript}
@@ -77,7 +132,6 @@ const MicroPhone = (props) => {
             </div>
           </div>
         </div>
-
         {/* Display the transcript */}
         {!setUserTranscript && (
           <p className="text-justify my-2 px-4 overflow-y-scroll capitalize text-white">

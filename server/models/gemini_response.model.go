@@ -36,4 +36,5 @@ type ExtractedResponse struct {
     Rating    string
     Feedback  string
     Question string
+	Code string
 }
