@@ -28,7 +28,7 @@ func main() {
 	// Retrieve port from environment variables
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
-		log.Fatal("PORT environment variable is not set")
+		PORT = "8080" 
 	}
 
 	// Configure CORS options
