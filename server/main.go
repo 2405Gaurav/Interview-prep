@@ -18,7 +18,7 @@ func main() {
 	r := routes.Router()
 
 	// Load environment variables from the .env file
-	if os.Getenv("DB_NAME") != "production" {
+	if _, err := os.Stat(".env"); err == nil {
 		err := godotenv.Load()
 		if err != nil {
 			log.Fatal("Error loading .env file")
