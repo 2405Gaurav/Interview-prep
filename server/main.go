@@ -24,7 +24,7 @@ func main() {
 	// Always get PORT from environment
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
-		PORT = "8080" // fallback for local development
+		PORT = "10000" // fallback for local development
 	}
 
 	// Setup CORS
