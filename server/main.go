@@ -17,8 +17,12 @@ func main() {
 	// Load .env file if it exists (only for local dev)
 	if _, err := os.Stat(".env"); err == nil {
 		if err := godotenv.Load(); err != nil {
-			log.Println("Warning: Could not load .env file (this is fine in production)")
+			fmt.Printf("Warning: Could not load .env file: %v (this is fine in production)\n", err)
+		} else {
+			fmt.Println("Successfully loaded .env file")
 		}
+	} else {
+		fmt.Println("No .env file found (expected in production)")
 	}
 
 	// Always get PORT from environment
@@ -33,9 +37,30 @@ func main() {
 	fmt.Printf("FRONTEND_URL_PRODUCTION_ONE: %s\n", os.Getenv("FRONTEND_URL_PRODUCTION_ONE"))
 	fmt.Printf("FRONTEND_URL_PRODUCTION_TWO: %s\n", os.Getenv("FRONTEND_URL_PRODUCTION_TWO"))
 
-	// Setup CORS
+	// Setup CORS with fallback origins
+	allowedOrigins := []string{}
+	
+	// Add environment URLs if they exist
+	if dev := os.Getenv("FRONTEND_URL_DEVELOPMENT"); dev != "" {
+		allowedOrigins = append(allowedOrigins, dev)
+	}
+	if prod1 := os.Getenv("FRONTEND_URL_PRODUCTION_ONE"); prod1 != "" {
+		allowedOrigins = append(allowedOrigins, prod1)
+	}
+	if prod2 := os.Getenv("FRONTEND_URL_PRODUCTION_TWO"); prod2 != "" {
+		allowedOrigins = append(allowedOrigins, prod2)
+	}
+	
+	// Fallback origins if none are set
+	if len(allowedOrigins) == 0 {
+		allowedOrigins = []string{"*"} // Allow all origins as fallback
+		fmt.Println("Warning: No frontend URLs configured, allowing all origins")
+	}
+	
+	fmt.Printf("Allowed CORS origins: %v\n", allowedOrigins)
+	
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL_DEVELOPMENT"), os.Getenv("FRONTEND_URL_PRODUCTION_ONE"), os.Getenv("FRONTEND_URL_PRODUCTION_TWO")},
+		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
