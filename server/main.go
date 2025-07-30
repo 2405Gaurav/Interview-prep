@@ -14,71 +14,38 @@ import (
 func main() {
 	fmt.Println("Starting the backend server for the mockinterview app...")
 
-	// Load .env file if it exists (only for local dev)
-	if _, err := os.Stat(".env"); err == nil {
-		if err := godotenv.Load(); err != nil {
-			fmt.Printf("Warning: Could not load .env file: %v (this is fine in production)\n", err)
-		} else {
-			fmt.Println("Successfully loaded .env file")
+	// Initialize router
+	r := routes.Router()
+
+	// Load environment variables from the .env file
+	if os.Getenv("DB_NAME") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatal("Error loading .env file")
 		}
-	} else {
-		fmt.Println("No .env file found (expected in production)")
 	}
 
-	// Always get PORT from environment
+	// Retrieve port from environment variables
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
-		PORT = "10000" // fallback for local development
+		log.Fatal("PORT environment variable is not set")
 	}
 
-	// Debug: Print all relevant environment variables
-	fmt.Printf("Environment PORT: %s\n", PORT)
-	fmt.Printf("FRONTEND_URL_DEVELOPMENT: %s\n", os.Getenv("FRONTEND_URL_DEVELOPMENT"))
-	fmt.Printf("FRONTEND_URL_PRODUCTION_ONE: %s\n", os.Getenv("FRONTEND_URL_PRODUCTION_ONE"))
-	fmt.Printf("FRONTEND_URL_PRODUCTION_TWO: %s\n", os.Getenv("FRONTEND_URL_PRODUCTION_TWO"))
-
-	// Setup CORS with fallback origins
-	allowedOrigins := []string{}
-	
-	// Add environment URLs if they exist
-	if dev := os.Getenv("FRONTEND_URL_DEVELOPMENT"); dev != "" {
-		allowedOrigins = append(allowedOrigins, dev)
-	}
-	if prod1 := os.Getenv("FRONTEND_URL_PRODUCTION_ONE"); prod1 != "" {
-		allowedOrigins = append(allowedOrigins, prod1)
-	}
-	if prod2 := os.Getenv("FRONTEND_URL_PRODUCTION_TWO"); prod2 != "" {
-		allowedOrigins = append(allowedOrigins, prod2)
-	}
-	
-	// Fallback origins if none are set
-	if len(allowedOrigins) == 0 {
-		allowedOrigins = []string{"*"} // Allow all origins as fallback
-		fmt.Println("Warning: No frontend URLs configured, allowing all origins")
-	}
-	
-	fmt.Printf("Allowed CORS origins: %v\n", allowedOrigins)
-	
+	// Configure CORS options
 	c := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
-		AllowCredentials: true,
+		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL_DEVELOPMENT"), os.Getenv("FRONTEND_URL_PRODUCTION_ONE"), os.Getenv("FRONTEND_URL_PRODUCTION_TWO")}, // Add your allowed origins here
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},                                                                                            // Add your allowed methods here
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},                                                                                           // Add your allowed headers here
+		AllowCredentials: true,                                                                                                                                // Set to true if you need to send cookies
 	})
 
-	handler := c.Handler(routes.Router())
+	// Wrap router with CORS middleware
+	handler := c.Handler(r)
 
-	fmt.Printf("Server is starting on port: %s\n", PORT)
-	fmt.Printf("Binding to: 0.0.0.0:%s\n", PORT)
+	fmt.Println("Server is starting on port:", PORT)
 
-	// Start server with 0.0.0.0 binding (correct for Render)
-	server := &http.Server{
-		Addr:    "0.0.0.0:" + PORT,
-		Handler: handler,
-	}
-
-	fmt.Println("Server successfully bound to port", PORT)
-	if err := server.ListenAndServe(); err != nil {
+	// Start the server
+	if err := http.ListenAndServe(":"+PORT, handler); err != nil {
 		log.Fatal("Failed to start the server:", err)
 	}
 }
