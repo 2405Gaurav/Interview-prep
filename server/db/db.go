@@ -16,10 +16,12 @@ var Collection *mongo.Collection
 
 func ConnectToDb(collectionName string) *mongo.Collection {
 
-	if os.Getenv("DB_NAME") != "production" {
+	// In a production environment (like Render), variables are set directly.
+	// The .env file is only for local development.
+	if os.Getenv("GO_ENV") != "production" {
 		err := godotenv.Load()
 		if err != nil {
-			log.Fatal("Error loading .env file")
+			log.Println("Warning: Could not load .env file. Using environment variables from the system.")
 		}
 	}
 
