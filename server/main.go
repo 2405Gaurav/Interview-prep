@@ -27,6 +27,12 @@ func main() {
 		PORT = "10000" // fallback for local development
 	}
 
+	// Debug: Print all relevant environment variables
+	fmt.Printf("Environment PORT: %s\n", PORT)
+	fmt.Printf("FRONTEND_URL_DEVELOPMENT: %s\n", os.Getenv("FRONTEND_URL_DEVELOPMENT"))
+	fmt.Printf("FRONTEND_URL_PRODUCTION_ONE: %s\n", os.Getenv("FRONTEND_URL_PRODUCTION_ONE"))
+	fmt.Printf("FRONTEND_URL_PRODUCTION_TWO: %s\n", os.Getenv("FRONTEND_URL_PRODUCTION_TWO"))
+
 	// Setup CORS
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL_DEVELOPMENT"), os.Getenv("FRONTEND_URL_PRODUCTION_ONE"), os.Getenv("FRONTEND_URL_PRODUCTION_TWO")},
@@ -37,10 +43,17 @@ func main() {
 
 	handler := c.Handler(routes.Router())
 
-	fmt.Println("Server is starting on port:", PORT)
+	fmt.Printf("Server is starting on port: %s\n", PORT)
+	fmt.Printf("Binding to: 0.0.0.0:%s\n", PORT)
 
 	// Start server with 0.0.0.0 binding (correct for Render)
-	if err := http.ListenAndServe("0.0.0.0:"+PORT, handler); err != nil {
+	server := &http.Server{
+		Addr:    "0.0.0.0:" + PORT,
+		Handler: handler,
+	}
+
+	fmt.Println("Server successfully bound to port", PORT)
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("Failed to start the server:", err)
 	}
 }
