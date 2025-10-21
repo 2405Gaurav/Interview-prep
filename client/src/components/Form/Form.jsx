@@ -6,6 +6,7 @@ import StackIcons from "./StackIcons";
 import ProjectForm from "./ProjectForm";
 import DeleteDialog from "./DeleteDialog";
 import EditProjectDialog from "./EditProjectDialog";
+import FileUploadForm from "./file-upload.jsx";
 import {
 	Combobox,
 	ComboboxInput,
@@ -81,7 +82,8 @@ const Form = () => {
 			return;
 		}
 		setIsSubmitting(true);
-		axios.post(`${SERVER}/api/v1/session`, payload)
+		axios
+			.post(`${SERVER}/api/v1/session`, payload)
 			.then(function (response) {
 				console.log(response);
 				localStorage.setItem("_id", response.data.data);
@@ -138,6 +140,12 @@ const Form = () => {
 						background: "#6082B6",
 					},
 				})}
+			<FileUploadForm
+				details={details}
+				setDetails={setDetails}
+				projectForms={projectForms}
+				setProjectForms={setProjectForms}
+			/>
 			<form
 				className="mx-[5%] md:mx-[25%] py-2"
 				onSubmit={(e) => handleFormSubmit(e)}
@@ -162,74 +170,56 @@ const Form = () => {
 						/>
 					</div>
 					<div className="flex flex-col mt-5">
-						<label className="text-white">
-							Tech Stacks
-						</label>
+						<label className="text-white">Tech Stacks</label>
 						<p className="text-sm leading-6 text-gray-400">
-							Please select all tech stacks you are
-							comfortable with. You can also add
-							custom tech stacks.
+							Please select all tech stacks you are comfortable
+							with. You can also add custom tech stacks.
 						</p>
 						{details.techStacks.length != 0 && (
 							<div
 								className={`bg-[#1E2A47] text-white p-2 rounded-md flex ${
-									details.techStacks
-										.length > 6
+									details.techStacks.length > 6
 										? "overflow-x-scroll"
 										: null
 								} min-w-[100%]`}
 							>
-								{details.techStacks.map(
-									(techStack, index) => {
-										return (
-											<div
-												key={
-													index
+								{details.techStacks.map((techStack, index) => {
+									return (
+										<div
+											key={index}
+											className="flex p-1 justify-center items-center mx-1 bg-[#111826] rounded-md transition-all"
+										>
+											<p>{techStack}</p>
+											<svg
+												onClick={() =>
+													setDetails(
+														(prevDetails) => ({
+															...prevDetails,
+															techStacks:
+																prevDetails.techStacks.filter(
+																	(stack) =>
+																		stack !==
+																		techStack
+																),
+														})
+													)
 												}
-												className="flex p-1 justify-center items-center mx-1 bg-[#111826] rounded-md transition-all"
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												strokeWidth={2.0}
+												stroke="red"
+												className="size-5 justify-center cursor-pointer ml-1"
 											>
-												<p>
-													{
-														techStack
-													}
-												</p>
-												<svg
-													onClick={() =>
-														setDetails(
-															(
-																prevDetails
-															) => ({
-																...prevDetails,
-																techStacks:
-																	prevDetails.techStacks.filter(
-																		(
-																			stack
-																		) =>
-																			stack !==
-																			techStack
-																	),
-															})
-														)
-													}
-													xmlns="http://www.w3.org/2000/svg"
-													fill="none"
-													viewBox="0 0 24 24"
-													strokeWidth={
-														2.0
-													}
-													stroke="red"
-													className="size-5 justify-center cursor-pointer ml-1"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-													/>
-												</svg>
-											</div>
-										);
-									}
-								)}
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+												/>
+											</svg>
+										</div>
+									);
+								})}
 							</div>
 						)}
 						<div className="bg-[#1E2A47] text-white p-2 rounded-md mt-2">
@@ -242,32 +232,20 @@ const Form = () => {
 									className={`bg-[#1E2A47] text-white h-[2.25rem] min-w-full border-white m-[-0.30rem] p-2`}
 									aria-label="Tech Stacks"
 									onChange={(event) =>
-										setQuery(
-											event.target
-												.value
-										)
+										setQuery(event.target.value)
 									}
 									value={query}
 									placeholder="Search tech stacks..."
 								/>
 								<ComboboxOptions className="mt-[0.30rem] border empty:invisible max-h-52 overflow-y-scroll">
 									{filteredTechStack.map(
-										(
-											techStack,
-											index
-										) => (
+										(techStack, index) => (
 											<ComboboxOption
-												key={
-													index
-												}
-												value={
-													techStack
-												}
+												key={index}
+												value={techStack}
 												className="data-[focus]:bg-blue-500 data-[focus]:text-slate-900 cursor-pointer"
 											>
-												{
-													techStack
-												}
+												{techStack}
 											</ComboboxOption>
 										)
 									)}
@@ -282,9 +260,7 @@ const Form = () => {
 						</div>
 					</div>
 					<div className="flex flex-col mt-5">
-						<legend className="text-white">
-							Experience
-						</legend>
+						<legend className="text-white">Experience</legend>
 						<div className="flex justify-start gap-3 mt-2">
 							<div className="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700 cursor-pointer">
 								<input
@@ -335,13 +311,10 @@ const Form = () => {
 						</div>
 					</div>
 					<div className="flex flex-col mt-5">
-						<legend className="text-white">
-							Projects
-						</legend>
+						<legend className="text-white">Projects</legend>
 						<p className="text-sm leading-6 text-gray-400">
-							Please add few best projects of yours.
-							This will help us to understand your
-							skills better.
+							Please add few best projects of yours. This will
+							help us to understand your skills better.
 						</p>
 						{details.projects.map((project) => (
 							<div key={project.id}>
@@ -349,112 +322,85 @@ const Form = () => {
 									<div className="flex-col w-[90%] pr-2">
 										<p className="text-slate-200 truncate">
 											<span className="font-bold text-transparent bg-clip-text bg-gradient-to-r to-emerald-500 from-sky-400">
-												{
-													project.title
-												}{" "}
-												|{" "}
+												{project.title} |{" "}
 											</span>
-											{
-												project.description
-											}
+											{project.description}
 										</p>
 
 										<legend
 											className={`${
-												project
-													.techStacks
-													.length >
-												8
+												project.techStacks.length > 8
 													? "overflow-x-scroll"
 													: null
 											} mt-2 mb-1`}
 										>
 											{project.techStacks.map(
-												(
-													techStack,
-													index
-												) => (
+												(techStack, index) => (
 													<span
-														key={
-															index
-														}
+														key={index}
 														className="mr-1 bg-[#111826] text-white text-xs px-2 py-1 rounded-md"
 													>
-														{
-															techStack
-														}
+														{techStack}
 													</span>
 												)
 											)}
 										</legend>
 									</div>
 									<div className="w-[10%] flex justify-end">
-									<Menu as="div">
-										<MenuButton className="inline-flex items-center gap-2 rounded-md bg-[#111826] py-1.5 px-3 text-sm/6 font-semibold text-white shadow-inner shadow-white/10 focus:outline-none data-[hover]:bg-[#111826]/6 data-[open]:bg-[#1E2A47] data-[focus]:outline-1 data-[focus]:outline-white">
-											Options
-											<CircleChevronDown className="size-4 fill-white/10" />
-										</MenuButton>
-										<MenuItems
-											transition
-											anchor="bottom end"
-											className="w-52 origin-top-right rounded-xl border border-white/5 bg-[#1E2A47] p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
-										>
-											<MenuItem>
-												<button
-													className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
-													onClick={() =>
-														setOpenEditDialog(
-															true
-														)
-													}
-												>
-													<Pencil className="size-4 fill-white/30" />
-													Edit
-												</button>
-											</MenuItem>
-											<div className="my-1 h-px bg-white/5" />
-											<MenuItem>
-												<button
-													className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
-													onClick={() =>
-														setOpenDeleteDialog(
-															true
-														)
-													}
-												>
-													<TrashIcon className="size-4 fill-white/30" />
-													Delete
-												</button>
-											</MenuItem>
-										</MenuItems>
+										<Menu as="div">
+											<MenuButton className="inline-flex items-center gap-2 rounded-md bg-[#111826] py-1.5 px-3 text-sm/6 font-semibold text-white shadow-inner shadow-white/10 focus:outline-none data-[hover]:bg-[#111826]/6 data-[open]:bg-[#1E2A47] data-[focus]:outline-1 data-[focus]:outline-white">
+												Options
+												<CircleChevronDown className="size-4 fill-white/10" />
+											</MenuButton>
+											<MenuItems
+												transition
+												anchor="bottom end"
+												className="w-52 origin-top-right rounded-xl border border-white/5 bg-[#1E2A47] p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+											>
+												<MenuItem>
+													<button
+														className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+														onClick={() =>
+															setOpenEditDialog(
+																true
+															)
+														}
+													>
+														<Pencil className="size-4 fill-white/30" />
+														Edit
+													</button>
+												</MenuItem>
+												<div className="my-1 h-px bg-white/5" />
+												<MenuItem>
+													<button
+														className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+														onClick={() =>
+															setOpenDeleteDialog(
+																true
+															)
+														}
+													>
+														<TrashIcon className="size-4 fill-white/30" />
+														Delete
+													</button>
+												</MenuItem>
+											</MenuItems>
 										</Menu>
 									</div>
 									<DeleteDialog
-										openDeleteDialog={
-											openDeleteDialog
-										}
+										openDeleteDialog={openDeleteDialog}
 										setOpenDeleteDialog={
 											setOpenDeleteDialog
 										}
 										project={project}
-										setDetails={
-											setDetails
-										}
+										setDetails={setDetails}
 									/>
 									<EditProjectDialog
-										openEditDialog={
-											openEditDialog
-										}
-										setOpenEditDialog={
-											setOpenEditDialog
-										}
-										projectToBeEdited={
-											project
-										}
+										openEditDialog={openEditDialog}
+										setOpenEditDialog={setOpenEditDialog}
+										projectToBeEdited={project}
 										details={details}
-										setDetails={
-											setDetails
-										}
+										setDetails={setDetails}
 									/>
 								</div>
 							</div>
