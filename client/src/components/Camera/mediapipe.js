@@ -186,6 +186,31 @@ export const detectUnfairMeans = (landmarks) => {
 
 
 
-export const micCheck = (transcript, listening, resetTranscript, micStatus) => {
+// ... (keep existing code above)
 
-}
+/**
+ * Checks for microphone status and speech detection
+ * @param {string} transcript - The accumulated text from speech recognition
+ * @param {boolean} listening - Whether the microphone is currently active
+ * @param {function} resetTranscript - Function to clear the transcript
+ * @param {string} micStatus - The status of the microphone (e.g., 'granted', 'denied')
+ */
+export const micCheck = (transcript, listening, resetTranscript, micStatus) => {
+      // 1. Check if the microphone permission is denied or if it's not listening
+      if (micStatus === 'denied' || !listening) {
+            return new mediapipeResponse(false, "Microphone is required for the exam", "danger");
+      }
+
+      // 2. Check if the user is speaking
+      // If the transcript has content, it means speech/noise was detected
+      if (transcript && transcript.trim().length > 0) {
+            // Clear the transcript so the same speech doesn't trigger the warning repeatedly
+            resetTranscript(); 
+            
+            console.log("Speaking detected:", transcript);
+            return new mediapipeResponse(false, "Speaking/Noise detected", "warning");
+      }
+
+      // 3. If everything is fine
+      return new mediapipeResponse(true, "Microphone OK", "success");
+};
