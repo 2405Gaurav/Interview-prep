@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Camera from "./Camera.jsx";
 import { MicroPhone } from "../index.js";
@@ -16,7 +16,7 @@ const CameraContainer = () => {
 				<div className="w-[30%] px-12 h-full flex-grow flex items-center justify-center">
 					<p className="font-normal leading-relaxed mx-auto text-slate-200 lg:text-lg text-base max-w-3xl">
 						Please check your camera and make sure it is
-						working Properly. You'll be proctored by an
+						working Properly. You&apos;ll be proctored by an
 						AI model.
 					</p>
 				</div>
