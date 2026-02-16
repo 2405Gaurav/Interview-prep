@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback } from "react";
+import PropTypes from "prop-types";
 import Webcam from "react-webcam";
 import { detectUnfairMeans } from "./mediapipe.js";
 import { mediapipeResponse } from "./mediapipeResponse.js";
@@ -8,9 +9,6 @@ import { toast } from "sonner";
 const Camera = ({ cameraStatus, setCameraStatus, marginY = 50 }) => {
 	const webcamRef = useRef(null);
 	const canvasRef = useRef(null);
-	let camera = null;
-
-	// const [cameraStatus, setCameraStatus] = useState(new mediapipeResponse(false, "Analysing your stream", "info"));
 
 	const handleCameraStatus = useCallback(
 		throttle((status) => {
@@ -22,7 +20,7 @@ const Camera = ({ cameraStatus, setCameraStatus, marginY = 50 }) => {
 				return prevStatus;
 			});
 		}, 1000),
-		[]
+		[setCameraStatus]
 	);
 
 	useEffect(() => {
@@ -39,6 +37,96 @@ const Camera = ({ cameraStatus, setCameraStatus, marginY = 50 }) => {
 			},
 		});
 	}, [cameraStatus]);
+
+	const onResults = useCallback((results) => {
+		const videoWidth = webcamRef.current.video.videoWidth;
+		const videoHeight = webcamRef.current.video.videoHeight;
+
+		// Set canvas width
+		canvasRef.current.width = videoWidth;
+		canvasRef.current.height = videoHeight;
+
+		const canvasElement = canvasRef.current;
+		const canvasCtx = canvasElement.getContext("2d");
+		canvasCtx.save();
+		canvasCtx.clearRect(
+			0,
+			0,
+			canvasElement.width,
+			canvasElement.height
+		);
+		canvasCtx.drawImage(
+			results.image,
+			0,
+			0,
+			canvasElement.width,
+			canvasElement.height
+		);
+
+		if (results.multiFaceLandmarks?.length === 1) {
+			for (const landmarks of results.multiFaceLandmarks) {
+				const result = detectUnfairMeans(landmarks);
+				handleCameraStatus(result);
+
+				// Use local `drawConnectors` from drawing_utils.js
+				window.drawConnectors(
+					canvasCtx,
+					landmarks,
+					window.FACEMESH_TESSELATION,
+					{ color: "#Cd9e7b", lineWidth: 0.1 }
+				);
+				window.drawConnectors(
+					canvasCtx,
+					landmarks,
+					window.FACEMESH_RIGHT_EYE,
+					{ color: "#Cd9e7b", lineWidth: 0.1 }
+				);
+				window.drawConnectors(
+					canvasCtx,
+					landmarks,
+					window.FACEMESH_RIGHT_EYEBROW,
+					{ color: "#Cd9e7b", lineWidth: 0.1 }
+				);
+				window.drawConnectors(
+					canvasCtx,
+					landmarks,
+					window.FACEMESH_LEFT_EYE,
+					{ color: "#Cd9e7b", lineWidth: 0.1 }
+				);
+				window.drawConnectors(
+					canvasCtx,
+					landmarks,
+					window.FACEMESH_LEFT_EYEBROW,
+					{ color: "#Cd9e7b", lineWidth: 0.1 }
+				);
+				window.drawConnectors(
+					canvasCtx,
+					landmarks,
+					window.FACEMESH_LIPS,
+					{ color: "#Cd9e7b", lineWidth: 0.1 }
+				);
+			}
+		} else if (results.multiFaceLandmarks?.length > 1) {
+			console.log("Multiple faces detected!!");
+			handleCameraStatus(
+				new mediapipeResponse(
+					false,
+					"Multiple faces detected!!",
+					"error"
+				)
+			);
+		} else {
+			console.log("No face detected!!");
+			handleCameraStatus(
+				new mediapipeResponse(
+					false,
+					"No face detected!!",
+					"error"
+				)
+			);
+		}
+		canvasCtx.restore();
+	}, [handleCameraStatus]);
 
 	useEffect(() => {
 		// Function to load local script dynamically
@@ -130,97 +218,7 @@ const Camera = ({ cameraStatus, setCameraStatus, marginY = 50 }) => {
 				if (script) document.body.removeChild(script);
 			});
 		};
-	}, []);
-
-	const onResults = (results) => {
-		const videoWidth = webcamRef.current.video.videoWidth;
-		const videoHeight = webcamRef.current.video.videoHeight;
-
-		// Set canvas width
-		canvasRef.current.width = videoWidth;
-		canvasRef.current.height = videoHeight;
-
-		const canvasElement = canvasRef.current;
-		const canvasCtx = canvasElement.getContext("2d");
-		canvasCtx.save();
-		canvasCtx.clearRect(
-			0,
-			0,
-			canvasElement.width,
-			canvasElement.height
-		);
-		canvasCtx.drawImage(
-			results.image,
-			0,
-			0,
-			canvasElement.width,
-			canvasElement.height
-		);
-
-		if (results.multiFaceLandmarks?.length === 1) {
-			for (const landmarks of results.multiFaceLandmarks) {
-				const result = detectUnfairMeans(landmarks);
-				handleCameraStatus(result);
-
-				// Use local `drawConnectors` from drawing_utils.js
-				window.drawConnectors(
-					canvasCtx,
-					landmarks,
-					window.FACEMESH_TESSELATION,
-					{ color: "#Cd9e7b", lineWidth: 0.1 }
-				);
-				window.drawConnectors(
-					canvasCtx,
-					landmarks,
-					window.FACEMESH_RIGHT_EYE,
-					{ color: "#Cd9e7b", lineWidth: 0.1 }
-				);
-				window.drawConnectors(
-					canvasCtx,
-					landmarks,
-					window.FACEMESH_RIGHT_EYEBROW,
-					{ color: "#Cd9e7b", lineWidth: 0.1 }
-				);
-				window.drawConnectors(
-					canvasCtx,
-					landmarks,
-					window.FACEMESH_LEFT_EYE,
-					{ color: "#Cd9e7b", lineWidth: 0.1 }
-				);
-				window.drawConnectors(
-					canvasCtx,
-					landmarks,
-					window.FACEMESH_LEFT_EYEBROW,
-					{ color: "#Cd9e7b", lineWidth: 0.1 }
-				);
-				window.drawConnectors(
-					canvasCtx,
-					landmarks,
-					window.FACEMESH_LIPS,
-					{ color: "#Cd9e7b", lineWidth: 0.1 }
-				);
-			}
-		} else if (results.multiFaceLandmarks?.length > 1) {
-			console.log("Multiple faces detected!!");
-			handleCameraStatus(
-				new mediapipeResponse(
-					false,
-					"Multiple faces detected!!",
-					"error"
-				)
-			);
-		} else {
-			console.log("No face detected!!");
-			handleCameraStatus(
-				new mediapipeResponse(
-					false,
-					"No face detected!!",
-					"error"
-				)
-			);
-		}
-		canvasCtx.restore();
-	};
+	}, [onResults]);
 
 	return (
 		<div>
@@ -256,6 +254,17 @@ const Camera = ({ cameraStatus, setCameraStatus, marginY = 50 }) => {
 			/>
 		</div>
 	);
+};
+
+Camera.propTypes = {
+	cameraStatus: PropTypes.shape({
+		allGood: PropTypes.bool,
+		label: PropTypes.string,
+		message: PropTypes.string,
+		isEqual: PropTypes.func,
+	}).isRequired,
+	setCameraStatus: PropTypes.func.isRequired,
+	marginY: PropTypes.number,
 };
 
 export default Camera;

@@ -1,5 +1,4 @@
 import "regenerator-runtime/runtime";
-import React from "react";
 import {
     Route,
     RouterProvider,
@@ -12,9 +11,9 @@ import {
     Form,
     CameraContainer,
     Interview,
-    Speaker,
+
     MicroPhone,
-    Ide,
+
     Contact,
     Report,
 } from "./components";

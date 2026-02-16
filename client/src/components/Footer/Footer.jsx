@@ -1,7 +1,5 @@
-import React from "react";
 import { motion } from "framer-motion";
 import { Terminal, Linkedin, Github, Globe } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const Footer = () => {
     const socialLinks = [
@@ -23,18 +21,23 @@ const Footer = () => {
     ];
 
     return (
-        <footer className="bg-gray-900 text-white py-6 border-t border-gray-800">
-            <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+        <footer className="relative bg-[#050505] text-white py-8 border-t border-white/5">
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/5 to-transparent pointer-events-none" />
+            
+            <div className="relative container mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
                 {/* Logo and Platform Name */}
-                <div className="flex items-center mb-4 md:mb-0">
-                    <Terminal className="w-8 h-8 mr-2 text-emerald-400" />
-                    <span className="text-xl font-bold text-emerald-300">
-                        TechPrep AI
+                <div className="flex items-center mb-6 md:mb-0">
+                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md mr-3">
+                        <Terminal className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                        interviewPrep.ai
                     </span>
                 </div>
 
                 {/* Social Links */}
-                <div className="flex space-x-4">
+                <div className="flex gap-3 mb-6 md:mb-0">
                     {socialLinks.map((social, index) => (
                         <motion.a
                             key={index}
@@ -42,24 +45,23 @@ const Footer = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={social.ariaLabel}
-                            className="text-gray-400 hover:text-emerald-400 transition-colors"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md hover:bg-white/10 hover:border-indigo-500/50 transition-all duration-300 group"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                         >
-                            <social.icon className="w-6 h-6" />
+                            <social.icon className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
                         </motion.a>
                     ))}
                 </div>
 
                 {/* Made with Love */}
-                <div className="mt-4 md:mt-0 text-sm text-gray-500">
-                    Made with ❤️ by Raushan
-                </div>
             </div>
 
             {/* Copyright and Additional Info */}
-            <div className="text-center text-xs text-gray-600 mt-4">
-                © {new Date().getFullYear()} TechPrep AI. All rights reserved.
+            <div className="relative text-center text-xs text-gray-600 mt-6 pt-6 border-t border-white/5">
+                <p className="font-light tracking-wide">
+                    © {new Date().getFullYear()} interviewPrep.AI All rights reserved.
+                </p>
             </div>
         </footer>
     );

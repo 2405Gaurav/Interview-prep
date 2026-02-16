@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import { CircleChevronDown, Pencil, TrashIcon } from "lucide-react";
+import { CircleChevronDown, Pencil, TrashIcon, Terminal, X } from "lucide-react";
 import StackIcons from "./StackIcons";
 import ProjectForm from "./ProjectForm";
 import DeleteDialog from "./DeleteDialog";
@@ -17,16 +18,6 @@ import { TechStackNames } from "./StackIcons";
 import { LOCAL_SERVER } from "@/constant.js";
 import axios from "axios";
 import { Toaster, toast } from "sonner";
-
-// Define a Project class
-class Project {
-	constructor(id, title = "", techStacks = [], description = "") {
-		this.id = id;
-		this.title = title;
-		this.techStacks = techStacks;
-		this.description = description;
-	}
-}
 
 // Define a Details class
 class Details {
@@ -44,6 +35,7 @@ class Details {
 		this.projects = projects;
 	}
 }
+
 const Form = () => {
 	const SERVER = import.meta.env.VITE_SERVER || LOCAL_SERVER;
 
@@ -123,10 +115,18 @@ const Form = () => {
 					return techstack
 						.toLowerCase()
 						.includes(query.toLowerCase());
-			  });
+		});
 
 	return (
-		<div className="bg-[#111826] pt-16 pb-4">
+		<div className="relative min-h-screen mt-10 bg-[#050505] text-white overflow-hidden font-sans selection:bg-indigo-500/30">
+			{/* --- BACKGROUND ARCHITECTURE --- */}
+			{/* Dynamic Glows */}
+			<div className="absolute top-[-10%] left-[-5%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full animate-pulse" />
+			<div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-purple-600/10 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
+			
+			{/* Grain Texture Overlay */}
+			<div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-50" />
+
 			{message &&
 				toast["error"](message, {
 					action: {
@@ -140,289 +140,327 @@ const Form = () => {
 						background: "#6082B6",
 					},
 				})}
+			
 			<FileUploadForm
 				details={details}
 				setDetails={setDetails}
 				projectForms={projectForms}
 				setProjectForms={setProjectForms}
 			/>
-			<form
-				className="mx-[5%] md:mx-[25%] py-2"
-				onSubmit={(e) => handleFormSubmit(e)}
-			>
-				<div className="flex flex-col justify-start min-h-[100vh]">
-					<h1 className="text-3xl text-white font-bold text-center">
-						Please enter few details
-					</h1>
-					<div className="flex flex-col mt-5">
-						<label className="text-white">Name</label>
-						<input
-							className="bg-[#1E2A47] text-white p-2 rounded-md mt-2"
-							type="text"
-							placeholder="Name"
-							value={details.name}
-							onChange={(e) =>
-								setDetails((prevDetails) => ({
-									...prevDetails,
-									name: e.target.value,
-								}))
-							}
-						/>
-					</div>
-					<div className="flex flex-col mt-5">
-						<label className="text-white">Tech Stacks</label>
-						<p className="text-sm leading-6 text-gray-400">
-							Please select all tech stacks you are comfortable
-							with. You can also add custom tech stacks.
+
+			{/* --- FORM CONTENT --- */}
+			<div className="relative z-10 container mx-auto px-6 py-24">
+				<motion.div
+					initial={{ opacity: 0, y: 20 }}
+					animate={{ opacity: 1, y: 0 }}
+					className="max-w-3xl mx-auto"
+				>
+					{/* Header */}
+					<div className="text-center mb-12">
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							transition={{ delay: 0.2 }}
+							className="flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-medium tracking-[0.3em] mb-6 uppercase text-gray-400 w-fit mx-auto"
+						>
+							<Terminal className="w-3 h-3" />
+							Getting Started
+						</motion.div>
+						
+						<h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-4 bg-gradient-to-b from-white via-white to-white/30 bg-clip-text text-transparent">
+							Tell Us About Yourself
+						</h1>
+						<p className="text-gray-400 text-base md:text-lg font-light">
+							Help us tailor your interview experience
 						</p>
-						{details.techStacks.length != 0 && (
-							<div
-								className={`bg-[#1E2A47] text-white p-2 rounded-md flex ${
-									details.techStacks.length > 6
-										? "overflow-x-scroll"
-										: null
-								} min-w-[100%]`}
-							>
-								{details.techStacks.map((techStack, index) => {
-									return (
+					</div>
+
+					<form onSubmit={(e) => handleFormSubmit(e)} className="space-y-8">
+						{/* Name Field */}
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: 0.3 }}
+						>
+							<label className="block text-sm font-medium text-gray-300 mb-3">
+								Full Name
+							</label>
+							<input
+								className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 transition-all duration-300"
+								type="text"
+								placeholder="Enter your name"
+								value={details.name}
+								onChange={(e) =>
+									setDetails((prevDetails) => ({
+										...prevDetails,
+										name: e.target.value,
+									}))
+								}
+							/>
+						</motion.div>
+
+						{/* Tech Stacks Field */}
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: 0.4 }}
+						>
+							<label className="block text-sm font-medium text-gray-300 mb-3">
+								Tech Stack
+							</label>
+							<p className="text-xs text-gray-500 mb-3">
+								Select all technologies you&apos;re comfortable with
+							</p>
+							
+							{/* Selected Tech Stacks */}
+							{details.techStacks.length !== 0 && (
+								<div className="flex flex-wrap gap-2 mb-3">
+									{details.techStacks.map((techStack, index) => (
 										<div
 											key={index}
-											className="flex p-1 justify-center items-center mx-1 bg-[#111826] rounded-md transition-all"
+											className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 rounded-full text-sm group hover:border-indigo-500/50 transition-all"
 										>
-											<p>{techStack}</p>
-											<svg
+											<span className="text-gray-200">{techStack}</span>
+											<button
+												type="button"
 												onClick={() =>
-													setDetails(
-														(prevDetails) => ({
-															...prevDetails,
-															techStacks:
-																prevDetails.techStacks.filter(
-																	(stack) =>
-																		stack !==
-																		techStack
-																),
-														})
-													)
+													setDetails((prevDetails) => ({
+														...prevDetails,
+														techStacks: prevDetails.techStacks.filter(
+															(stack) => stack !== techStack
+														),
+													}))
 												}
-												xmlns="http://www.w3.org/2000/svg"
-												fill="none"
-												viewBox="0 0 24 24"
-												strokeWidth={2.0}
-												stroke="red"
-												className="size-5 justify-center cursor-pointer ml-1"
+												className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-red-500/20 transition-colors"
 											>
-												<path
-													strokeLinecap="round"
-													strokeLinejoin="round"
-													d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-												/>
-											</svg>
+												<X className="w-3 h-3 text-gray-400 group-hover:text-red-400" />
+											</button>
 										</div>
-									);
-								})}
-							</div>
-						)}
-						<div className="bg-[#1E2A47] text-white p-2 rounded-md mt-2">
-							<Combobox
-								as="div"
-								value={query}
-								onChange={addTechStack}
-							>
-								<ComboboxInput
-									className={`bg-[#1E2A47] text-white h-[2.25rem] min-w-full border-white m-[-0.30rem] p-2`}
-									aria-label="Tech Stacks"
-									onChange={(event) =>
-										setQuery(event.target.value)
-									}
+									))}
+								</div>
+							)}
+
+							{/* Combobox */}
+							<div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
+								<Combobox
+									as="div"
 									value={query}
-									placeholder="Search tech stacks..."
-								/>
-								<ComboboxOptions className="mt-[0.30rem] border empty:invisible max-h-52 overflow-y-scroll">
-									{filteredTechStack.map(
-										(techStack, index) => (
+									onChange={addTechStack}
+								>
+									<ComboboxInput
+										className="w-full bg-transparent text-white px-4 py-3 focus:outline-none placeholder-gray-500"
+										aria-label="Tech Stacks"
+										onChange={(event) =>
+											setQuery(event.target.value)
+										}
+										value={query}
+										placeholder="Search or add tech stacks..."
+									/>
+									<ComboboxOptions className="border-t border-white/10 max-h-52 overflow-y-auto bg-white/5 backdrop-blur-md">
+										{filteredTechStack.map((techStack, index) => (
 											<ComboboxOption
 												key={index}
 												value={techStack}
-												className="data-[focus]:bg-blue-500 data-[focus]:text-slate-900 cursor-pointer"
+												className="px-4 py-2 cursor-pointer hover:bg-indigo-600/20 transition-colors text-gray-300"
 											>
 												{techStack}
 											</ComboboxOption>
-										)
-									)}
-								</ComboboxOptions>
-							</Combobox>
-						</div>
-						<div className="flex flex-wrap mt-2 items-center justify-around">
-							<StackIcons
+										))}
+									</ComboboxOptions>
+								</Combobox>
+							</div>
+
+							{/* Stack Icons */}
+							<div className="flex flex-wrap mt-4 gap-3 items-center justify-center">
+								<StackIcons
+									details={details}
+									setDetails={setDetails}
+								/>
+							</div>
+						</motion.div>
+
+						{/* Experience Level */}
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: 0.5 }}
+						>
+							<label className="block text-sm font-medium text-gray-300 mb-3">
+								Experience Level
+							</label>
+							<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+								{[
+									{ id: "fresher", label: "Fresher", value: "Fresher" },
+									{ id: "intermediate", label: "0-2 Years", value: "0-2 Years" },
+									{ id: "experienced", label: "2+ Years", value: "2+ Years" }
+								].map((option, index) => (
+									<div
+										key={option.id}
+										className="relative"
+									>
+										<input
+											id={option.id}
+											type="radio"
+											name="experience"
+											value={option.value}
+											defaultChecked={index === 0}
+											onChange={(e) =>
+												setDetails((prevDetails) => ({
+													...prevDetails,
+													experience: e.target.value,
+												}))
+											}
+											className="peer sr-only"
+										/>
+										<label
+											htmlFor={option.id}
+											className="flex items-center justify-center px-4 py-3 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl cursor-pointer peer-checked:border-indigo-500/50 peer-checked:bg-gradient-to-r peer-checked:from-indigo-600/20 peer-checked:to-purple-600/20 hover:border-white/20 transition-all duration-300"
+										>
+											<span className="text-sm font-medium text-gray-300 peer-checked:text-white">
+												{option.label}
+											</span>
+										</label>
+									</div>
+								))}
+							</div>
+						</motion.div>
+
+						{/* Projects Section */}
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: 0.6 }}
+						>
+							<label className="block text-sm font-medium text-gray-300 mb-3">
+								Projects
+							</label>
+							<p className="text-xs text-gray-500 mb-4">
+								Add your best projects to showcase your skills
+							</p>
+
+							{/* Project List */}
+							<div className="space-y-3">
+								{details.projects.map((project) => (
+									<div key={project.id}>
+										<div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-4 hover:border-indigo-500/30 transition-all duration-300 group">
+											<div className="flex items-start justify-between gap-4">
+												<div className="flex-1 min-w-0">
+													<h3 className="text-base font-semibold text-white truncate mb-1">
+														{project.title}
+													</h3>
+													<p className="text-sm text-gray-400 line-clamp-2 mb-3">
+														{project.description}
+													</p>
+													
+													{/* Tech Stacks */}
+													<div className="flex flex-wrap gap-1">
+														{project.techStacks.map((techStack, index) => (
+															<span
+																key={index}
+																className="text-[10px] px-2 py-1 bg-white/5 border border-white/10 rounded-md text-gray-400 uppercase tracking-wider"
+															>
+																{techStack}
+															</span>
+														))}
+													</div>
+												</div>
+
+												{/* Actions Menu */}
+												<Menu as="div" className="relative">
+													<MenuButton className="flex items-center gap-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-gray-300 hover:bg-white/10 transition-colors">
+														Options
+														<CircleChevronDown className="w-3 h-3" />
+													</MenuButton>
+													<MenuItems className="absolute right-0 mt-2 w-40 origin-top-right rounded-xl border border-white/10 bg-[#050505]/95 backdrop-blur-md p-1 shadow-xl z-50">
+														<MenuItem>
+															<button
+																className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-300 hover:bg-white/10 transition-colors"
+																onClick={() => setOpenEditDialog(true)}
+															>
+																<Pencil className="w-4 h-4" />
+																Edit
+															</button>
+														</MenuItem>
+														<div className="h-px bg-white/5 my-1" />
+														<MenuItem>
+															<button
+																className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+																onClick={() => setOpenDeleteDialog(true)}
+															>
+																<TrashIcon className="w-4 h-4" />
+																Delete
+															</button>
+														</MenuItem>
+													</MenuItems>
+												</Menu>
+											</div>
+										</div>
+
+										<DeleteDialog
+											openDeleteDialog={openDeleteDialog}
+											setOpenDeleteDialog={setOpenDeleteDialog}
+											project={project}
+											setDetails={setDetails}
+										/>
+										<EditProjectDialog
+											openEditDialog={openEditDialog}
+											setOpenEditDialog={setOpenEditDialog}
+											projectToBeEdited={project}
+											details={details}
+											setDetails={setDetails}
+										/>
+									</div>
+								))}
+							</div>
+
+							{/* Add Project Form */}
+							<ProjectForm
 								details={details}
 								setDetails={setDetails}
+								projectForms={projectForms}
+								setProjectForms={setProjectForms}
 							/>
-						</div>
-					</div>
-					<div className="flex flex-col mt-5">
-						<legend className="text-white">Experience</legend>
-						<div className="flex justify-start gap-3 mt-2">
-							<div className="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700 cursor-pointer">
-								<input
-									id="bordered-radio-1"
-									type="radio"
-									value=""
-									name="bordered-radio"
-									className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
-									defaultChecked
-								/>
-								<label
-									htmlFor="bordered-radio-1"
-									className="text-white mx-4 py-4 cursor-pointer"
-								>
-									Fresher
-								</label>
-							</div>
-							<div className="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700 cursor-pointer">
-								<input
-									id="bordered-radio-2"
-									type="radio"
-									value=""
-									name="bordered-radio"
-									className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
-								/>
-								<label
-									htmlFor="bordered-radio-2"
-									className="text-white mx-4 py-4 cursor-pointer"
-								>
-									0-2 Years
-								</label>
-							</div>
-							<div className="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700 cursor-pointer">
-								<input
-									id="bordered-radio-3"
-									type="radio"
-									value=""
-									name="bordered-radio"
-									className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
-								/>
-								<label
-									htmlFor="bordered-radio-3"
-									className="text-white mx-4 py-4 cursor-pointer"
-								>
-									2+ Years
-								</label>
-							</div>
-						</div>
-					</div>
-					<div className="flex flex-col mt-5">
-						<legend className="text-white">Projects</legend>
-						<p className="text-sm leading-6 text-gray-400">
-							Please add few best projects of yours. This will
-							help us to understand your skills better.
-						</p>
-						{details.projects.map((project) => (
-							<div key={project.id}>
-								<div className="flex items-center justify-between bg-[#1E2A47] rounded-md mt-5 px-2 py-1 gap-2">
-									<div className="flex-col w-[90%] pr-2">
-										<p className="text-slate-200 truncate">
-											<span className="font-bold text-transparent bg-clip-text bg-gradient-to-r to-emerald-500 from-sky-400">
-												{project.title} |{" "}
-											</span>
-											{project.description}
-										</p>
+						</motion.div>
 
-										<legend
-											className={`${
-												project.techStacks.length > 8
-													? "overflow-x-scroll"
-													: null
-											} mt-2 mb-1`}
-										>
-											{project.techStacks.map(
-												(techStack, index) => (
-													<span
-														key={index}
-														className="mr-1 bg-[#111826] text-white text-xs px-2 py-1 rounded-md"
-													>
-														{techStack}
-													</span>
-												)
-											)}
-										</legend>
-									</div>
-									<div className="w-[10%] flex justify-end">
-										<Menu as="div">
-											<MenuButton className="inline-flex items-center gap-2 rounded-md bg-[#111826] py-1.5 px-3 text-sm/6 font-semibold text-white shadow-inner shadow-white/10 focus:outline-none data-[hover]:bg-[#111826]/6 data-[open]:bg-[#1E2A47] data-[focus]:outline-1 data-[focus]:outline-white">
-												Options
-												<CircleChevronDown className="size-4 fill-white/10" />
-											</MenuButton>
-											<MenuItems
-												transition
-												anchor="bottom end"
-												className="w-52 origin-top-right rounded-xl border border-white/5 bg-[#1E2A47] p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+						{/* Submit Button */}
+						<motion.div
+							initial={{ opacity: 0, y: 20 }}
+							animate={{ opacity: 1, y: 0 }}
+							transition={{ delay: 0.7 }}
+						>
+							<button
+								type="submit"
+								disabled={isSubmitting}
+								className="group relative w-full inline-flex items-center justify-center px-8 py-4 text-base font-medium text-white transition-all duration-300 ease-out rounded-xl overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg hover:shadow-indigo-500/50 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+							>
+								<span className="relative z-10 flex items-center gap-2">
+									{isSubmitting ? (
+										<>
+											<div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+											Processing...
+										</>
+									) : (
+										<>
+											Continue to Interview
+											<motion.span
+												className="inline-block"
+												initial={{ x: 0 }}
+												whileHover={{ x: 5 }}
+												transition={{ duration: 0.3 }}
 											>
-												<MenuItem>
-													<button
-														className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
-														onClick={() =>
-															setOpenEditDialog(
-																true
-															)
-														}
-													>
-														<Pencil className="size-4 fill-white/30" />
-														Edit
-													</button>
-												</MenuItem>
-												<div className="my-1 h-px bg-white/5" />
-												<MenuItem>
-													<button
-														className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
-														onClick={() =>
-															setOpenDeleteDialog(
-																true
-															)
-														}
-													>
-														<TrashIcon className="size-4 fill-white/30" />
-														Delete
-													</button>
-												</MenuItem>
-											</MenuItems>
-										</Menu>
-									</div>
-									<DeleteDialog
-										openDeleteDialog={openDeleteDialog}
-										setOpenDeleteDialog={
-											setOpenDeleteDialog
-										}
-										project={project}
-										setDetails={setDetails}
-									/>
-									<EditProjectDialog
-										openEditDialog={openEditDialog}
-										setOpenEditDialog={setOpenEditDialog}
-										projectToBeEdited={project}
-										details={details}
-										setDetails={setDetails}
-									/>
-								</div>
-							</div>
-						))}
-						<ProjectForm
-							details={details}
-							setDetails={setDetails}
-							projectForms={projectForms}
-							setProjectForms={setProjectForms}
-						/>
-					</div>
-				</div>
-				<button
-					className="bg-[#2563EB] text-white p-2 rounded-md min-w-full mt-4 cursor-pointer text-center"
-					type="submit"
-					disabled={isSubmitting}
-				>
-					{isSubmitting
-						? "Please wait while we take you to the dashboard"
-						: "Submit"}
-				</button>
-			</form>
+												→
+											</motion.span>
+										</>
+									)}
+								</span>
+								{/* Animated gradient background */}
+								<div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+							</button>
+						</motion.div>
+					</form>
+				</motion.div>
+			</div>
+
 			<Toaster position="bottom-right" richColors />
 		</div>
 	);
