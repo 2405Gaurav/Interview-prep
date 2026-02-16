@@ -57,19 +57,19 @@ const Form = () => {
 	const handleFormSubmit = (e) => {
 		e.preventDefault();
 		const payload = {
-			UserType: details.userType,
-			Name: details.name,
-			TechStacks: details.techStacks,
-			Experience: details.experience,
-			Projects: details.projects,
-		};
+  userType: details.userType,
+  name: details.name,
+  techStacks: details.techStacks,
+  experience: details.experience,
+  projects: details.projects,
+};
 		console.log(payload);
-		if (
-			payload.Name.trim() === "" ||
-			payload.TechStacks.length === 0 ||
-			payload.Experience.trim() === "" ||
-			payload.Projects.length === 0
-		) {
+	if (
+  payload.name.trim() === "" ||
+  payload.techStacks.length === 0 ||
+  payload.experience.trim() === "" ||
+  payload.projects.length === 0
+) {
 			toast.error("Please fill all the fields!");
 			return;
 		}

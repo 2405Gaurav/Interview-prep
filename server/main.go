@@ -33,13 +33,20 @@ func main() {
 		log.Fatal("PORT environment variable is not set")
 	}
 
-	// Configure CORS options
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{os.Getenv("FRONTEND_URL_DEVELOPMENT"), os.Getenv("FRONTEND_URL_PRODUCTION_ONE"), os.Getenv("FRONTEND_URL_PRODUCTION_TWO")}, // Add your allowed origins here
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},                                                                                            // Add your allowed methods here
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},                                                                                           // Add your allowed headers here
-		AllowCredentials: true,                                                                                                                                // Set to true if you need to send cookies
-	})
+	// // Configure CORS options
+	// c := cors.New(cors.Options{
+	// 	AllowedOrigins:   []string{os.Getenv("FRONTEND_URL_DEVELOPMENT"), os.Getenv("FRONTEND_URL_PRODUCTION_ONE"), os.Getenv("FRONTEND_URL_PRODUCTION_TWO")}, // Add your allowed origins here
+	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},                                                                                            // Add your allowed methods here
+	// 	AllowedHeaders:   []string{"Content-Type", "Authorization"},                                                                                           // Add your allowed headers here
+	// 	AllowCredentials: true,                                                                                                                                // Set to true if you need to send cookies
+	// })
+
+c := cors.New(cors.Options{
+    AllowedOrigins:   []string{"http://localhost:5173"},
+    AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+    AllowedHeaders:   []string{"Content-Type", "Authorization"},
+    AllowCredentials: true,
+})
 
 	// Wrap router with CORS middleware
 	handler := c.Handler(r)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { LOCAL_SERVER } from "@/constant.js";
@@ -77,11 +77,14 @@ const Interview = () => {
                 setIdeEnabled(true);
             }
             setInterviewerStatus("speaking");
-        } catch (error) {
-            setGeminiResponse(
-                response.data?.message || "Error fetching Gemini Response"
-            );
-        } finally {
+        }catch (error) {
+    setGeminiResponse(
+        error?.response?.data?.message || 
+        error.message || 
+        "Error fetching Gemini Response"
+    );
+}
+        finally {
             setGettingGeminiResponse(false);
         }
     };
