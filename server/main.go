@@ -32,6 +32,7 @@ func main() {
 	// Configure CORS
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins: []string{
+			"https://interview-prep-gt.vercel.app",
 			os.Getenv("FRONTEND_URL"),
 			"http://localhost:5173",
 		},
