@@ -1,31 +1,79 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 
 const Speaker = ({ response, speakerStatus, setSpeakerStatus }) => {
-    const [audio, setAudio] = useState(null);
+    // We use useRef instead of useState for the utterance to prevent 
+    // the "garbage collection" bug in Chrome where audio stops early.
+    const utteranceRef = useRef(null);
 
     useEffect(() => {
-        if (response) {
-            // Synthesize speech or handle audio file based on the response
-            const utterance = new SpeechSynthesisUtterance(response);
-            utterance.onend = () => {
-                setSpeakerStatus("ended");
-            };
+        if (!response) return;
 
+        // 1. Cancel any current speaking to avoid overlaps
+        window.speechSynthesis.cancel();
+
+        // 2. Create the utterance configuration
+        const utterance = new SpeechSynthesisUtterance(response);
+        utteranceRef.current = utterance;
+
+        // 3. Event Listeners
+        utterance.onstart = () => {
             setSpeakerStatus("speaking");
-            speechSynthesis.speak(utterance);
+        };
+
+        utterance.onend = () => {
+            setSpeakerStatus("ended");
+        };
+
+        utterance.onerror = (event) => {
+            console.error("Speech synthesis error", event);
+            setSpeakerStatus("error");
+        };
+
+        // 4. Voice Loading Strategy
+        const speak = () => {
+            const voices = window.speechSynthesis.getVoices();
+            // Try to select a natural sounding Google voice if available
+            const preferredVoice = voices.find(v => v.name.includes("Google") && v.lang.includes("en")) || voices[0];
+            
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+            window.speechSynthesis.speak(utterance);
+        };
+
+        // Handle async voice loading (common in Chrome)
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = speak;
+        } else {
+            speak();
         }
 
+        // Cleanup: Stop speaking if component unmounts or response changes
         return () => {
-            // Cleanup any ongoing speech synthesis
-            speechSynthesis.cancel();
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.onvoiceschanged = null;
         };
     }, [response, setSpeakerStatus]);
 
     return (
         <div className="flex flex-col items-center justify-center bg-gray-800 p-4 rounded-md text-white">
-            <p>{speakerStatus === "speaking" ? "Speaking..." : "Ready"}</p>
+            <div className="flex items-center gap-2">
+                {speakerStatus === "speaking" ? (
+                    <span className="animate-pulse text-green-400">● Speaking...</span>
+                ) : (
+                    <span className="text-gray-400">Ready</span>
+                )}
+            </div>
         </div>
     );
+};
+
+// Define PropTypes to fix eslint validation errors
+Speaker.propTypes = {
+    response: PropTypes.string, // response is optional (can be null/empty)
+    speakerStatus: PropTypes.string.isRequired,
+    setSpeakerStatus: PropTypes.func.isRequired,
 };
 
 export default Speaker;

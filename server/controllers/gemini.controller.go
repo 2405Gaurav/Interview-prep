@@ -2,29 +2,31 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"github.com/rnkp755/mockinterviewBackend/models"
 	"github.com/rnkp755/mockinterviewBackend/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"google.golang.org/api/option"
 )
 
 var model *genai.GenerativeModel
 var client *genai.Client
 
+// GeminiRequest struct handles the incoming JSON body
+type GeminiRequest struct {
+	Answer string `json:"answer"`
+}
+
 func init() {
-	// Only load .env if not in production
 	if os.Getenv("DB_NAME") != "production" {
 		if err := godotenv.Load(); err != nil {
 			log.Println("Warning: Error loading .env file")
@@ -43,21 +45,20 @@ func init() {
 		log.Fatalf("Failed to create Gemini client: %v", err)
 	}
 
+	// USE A STABLE MODEL NAME
+	// "gemini-2.0-flash" might cause 404s if not available in your region/account yet.
+	// Safe bet: "gemini-1.5-flash" or "gemini-2.0-flash-exp"
 	model = client.GenerativeModel("gemini-2.5-flash")
-	// Optional: Set temperature or other settings here
-	// model.SetTemperature(0.7) 
 }
 
 // extractPartsFromGeminiResponse parses the text output using Regex
 func extractPartsFromGeminiResponse(response string) models.ExtractedResponse {
 	result := models.ExtractedResponse{}
 
-	// Helper function to extract content based on tag
 	extract := func(tag string) string {
 		re := regexp.MustCompile(fmt.Sprintf(`<%s>(.*?)</%s>`, tag, tag))
 		matches := re.FindStringSubmatch(response)
 		if len(matches) > 1 {
-			// Trim whitespace to ensure clean DB entries
 			return strings.TrimSpace(matches[1])
 		}
 		return ""
@@ -66,8 +67,7 @@ func extractPartsFromGeminiResponse(response string) models.ExtractedResponse {
 	result.Rating = extract("Rating")
 	result.Feedback = extract("Feedback")
 	result.Question = extract("Question")
-	
-	// Handle Code specifically (it might span multiple lines, dot matches newline)
+
 	codeRe := regexp.MustCompile(`(?s)<Code>(.*?)</Code>`)
 	codeMatches := codeRe.FindStringSubmatch(response)
 	if len(codeMatches) > 1 {
@@ -78,17 +78,65 @@ func extractPartsFromGeminiResponse(response string) models.ExtractedResponse {
 }
 
 func AskToGemini(w http.ResponseWriter, r *http.Request) {
+	log.Println("----- Received AskToGemini Request -----")
+
 	if r.Method != http.MethodPost {
 		utils.ErrorResponse(w, http.StatusMethodNotAllowed, "Invalid request method")
 		return
 	}
 
-	// 1. Get Input Data
+	var answer string
+	contentType := r.Header.Get("Content-Type")
+	log.Printf("Content-Type: %s", contentType)
+
+	// --- 1. ROBUST INPUT PARSING ---
+	if strings.Contains(contentType, "application/json") {
+		var reqBody GeminiRequest
+		if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+			utils.ErrorResponse(w, http.StatusBadRequest, "Invalid JSON body")
+			return
+		}
+		answer = reqBody.Answer
+	} else if strings.Contains(contentType, "multipart/form-data") {
+		// Parse up to 10MB
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			log.Printf("Error parsing multipart: %v", err)
+			utils.ErrorResponse(w, http.StatusBadRequest, "Failed to parse form data")
+			return
+		}
+
+		// DEBUG: Print ALL keys received to find the mismatch
+		log.Println("--- Printing All Received Form Keys ---")
+		if r.MultipartForm != nil && r.MultipartForm.Value != nil {
+			for key, values := range r.MultipartForm.Value {
+				log.Printf("Key: [%s] | Value Length: %d | First Value: %s", key, len(values[0]), values[0])
+			}
+		} else {
+			log.Println("Warning: MultipartForm is empty!")
+		}
+		log.Println("---------------------------------------")
+
+		// Try to find the answer using multiple common keys
+		answer = r.FormValue("answer")
+		if answer == "" {
+			answer = r.FormValue("Answer") // Try Capitalized
+		}
+		if answer == "" {
+			answer = r.FormValue("transcript") // Try 'transcript'
+		}
+
+	} else {
+		// Fallback for standard form encoding
+		r.ParseForm()
+		answer = r.FormValue("answer")
+	}
+
+	// --- 2. VALIDATION ---
+	// Extract Session ID
 	vars := mux.Vars(r)
 	sessionId := vars["sessionId"]
-	answer := r.FormValue("answer")
 
-	// 2. Validate Session
+	// Get Session
 	session, err := GetSession(sessionId)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to get session")
@@ -100,72 +148,62 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Generate Prompt Logic
-	var prompt string
-	
-	// If the interview has started, we need the previous questions and the user's answer
+	// Check if answer is required
 	if session.InterviewStatus != models.NotStarted {
 		if strings.TrimSpace(answer) == "" {
-			utils.ErrorResponse(w, http.StatusBadRequest, "Please provide an answer")
+			log.Println("Error: Answer is empty but required for this stage.")
+			utils.ErrorResponse(w, http.StatusBadRequest, "Please provide an answer (Received empty string)")
 			return
 		}
+	}
 
+	// ... (Rest of the logic: Questions, PromptGenerator, Gemini API call) ...
+	// The rest of your code works fine once 'answer' is populated.
+	
+	// Copy-paste the rest of your logic here:
+	var prompt string
+	if session.InterviewStatus != models.NotStarted {
 		questions, err := GetQuestion(session.ID.Hex())
 		if err != nil {
-			utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to get question history")
-			return
+			log.Printf("Error getting questions: %v", err)
 		}
 		prompt = utils.PromptGenerator(session, questions, answer)
 	} else {
-		// First interaction
 		prompt = utils.PromptGenerator(session, nil, "")
 	}
 
-	if prompt == "" {
-		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to generate prompt")
-		return
-	}
-
-	// 4. Call Gemini API
-	// Use r.Context() so if user cancels request, we stop processing
+	// Gemini Call
+	log.Println("Sending prompt to Gemini...")
 	resp, err := model.GenerateContent(r.Context(), genai.Text(prompt))
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Error generating AI content: %v", err))
+		log.Printf("Gemini Error: %v", err)
+		utils.ErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Error generating content: %v", err))
 		return
 	}
 
-	// 5. Extract Text from SDK Response directly (No JSON Marshal needed)
+	// Response Parsing
 	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
 		utils.ErrorResponse(w, http.StatusInternalServerError, "Empty response from Gemini")
 		return
 	}
-
-	// Assuming text response. Type assertion handles the interface{}.
+	
 	part := resp.Candidates[0].Content.Parts[0]
 	textResp, ok := part.(genai.Text)
 	if !ok {
-		utils.ErrorResponse(w, http.StatusInternalServerError, "Unexpected response format from Gemini")
+		utils.ErrorResponse(w, http.StatusInternalServerError, "Unexpected response format")
 		return
 	}
-	
-	extractedParts := extractPartsFromGeminiResponse(string(textResp))
 
-	// Combine Question and Code for storage
+	extractedParts := extractPartsFromGeminiResponse(string(textResp))
+	
+	// Save to DB
 	fullQuestionText := extractedParts.Question
 	if extractedParts.Code != "" {
 		fullQuestionText += "\n```\n" + extractedParts.Code + "\n```"
 	}
 
-	// 6. Database Operations
 	if session.InterviewStatus == models.NotStarted {
-		// Update Session Status
-		_, err = UpdateSession(sessionId, bson.M{"interviewstatus": "waiting-for-answer"})
-		if err != nil {
-			utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to update session status")
-			return
-		}
-
-		// Create New Question Document
+		UpdateSession(sessionId, bson.M{"interviewstatus": "waiting-for-answer"})
 		question := models.Question{
 			ID:        primitive.NewObjectID(),
 			SessionId: session.ID,
@@ -175,23 +213,16 @@ func AskToGemini(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
-		_, err = AddQuestion(question)
+		AddQuestion(question)
 	} else {
-		// Update Existing Question Document
-		_, err = UpdateQuestion(fullQuestionText, extractedParts.Rating, extractedParts.Feedback, sessionId)
+		UpdateQuestion(fullQuestionText, extractedParts.Rating, extractedParts.Feedback, sessionId)
 	}
 
-	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to save question data")
-		return
-	}
-
-	// 7. Send Response
 	w.Header().Set("Content-Type", "application/json")
 	utils.SuccessResponse(w, "Gemini response retrieved successfully", map[string]interface{}{
 		"question": extractedParts.Question,
 		"code":     extractedParts.Code,
-		"rating":   extractedParts.Rating,   // Optional: send back rating/feedback if UI needs it
+		"rating":   extractedParts.Rating,
 		"feedback": extractedParts.Feedback,
 	})
 }

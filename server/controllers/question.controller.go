@@ -19,88 +19,112 @@ import (
 var QuestionCollection *mongo.Collection
 
 func init() {
+	// 1. Load Environment Variables
 	if os.Getenv("DB_NAME") != "production" {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file")
+		if err := godotenv.Load(); err != nil {
+			log.Println("Warning: Error loading .env file in Question Controller")
 		}
 	}
 
+	// 2. Initialize Database Connection
 	colName := os.Getenv("QUESTION_COLLECTION_NAME")
+	if colName == "" {
+		log.Fatal("QUESTION_COLLECTION_NAME is not set in environment variables")
+	}
 
+	// Assuming db.ConnectToDb returns *mongo.Collection
 	QuestionCollection = db.ConnectToDb(colName)
 }
 
 func AddQuestion(question models.Question) (*models.Question, error) {
+	// Create a context with a 10-second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	_, err := QuestionCollection.InsertOne(context.TODO(), question)
+	_, err := QuestionCollection.InsertOne(ctx, question)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create session: %v", err)
+		return nil, fmt.Errorf("failed to insert question document: %v", err)
 	}
 
 	return &question, nil
-
 }
 
-func UpdateQuestion(question string, rating string, review string, sessionIdStr string) (*models.Question, error) {
+func UpdateQuestion(questionText string, rating string, review string, sessionIdStr string) (*models.Question, error) {
+	// 1. Validate Session ID
 	sessionId, err := primitive.ObjectIDFromHex(sessionIdStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid session ID: %v", err)
+		return nil, fmt.Errorf("invalid session ID format: %v", err)
 	}
 
-	// Create the update document based on provided parameters
-	updateFields := bson.M{
+	// 2. Prepare Context
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// 3. Construct Update Document
+	// Always update the 'updatedAt' timestamp
+	updateDoc := bson.M{
 		"$set": bson.M{
 			"updatedAt": time.Now(),
 		},
 	}
 
-	// Conditionally add push operations
-	if question != "" || rating != "" || review != "" {
-		updateFields["$push"] = bson.M{}
-
-		if question != "" {
-			updateFields["$push"].(bson.M)["question"] = question
-		}
-		if rating != "" {
-			updateFields["$push"].(bson.M)["rating"] = rating
-		}
-		if review != "" {
-			updateFields["$push"].(bson.M)["review"] = review
-		}
+	// Construct the $push document dynamically based on inputs
+	pushFields := bson.M{}
+	if questionText != "" {
+		pushFields["question"] = questionText
+	}
+	if rating != "" {
+		pushFields["rating"] = rating
+	}
+	if review != "" {
+		// Maps 'review' argument to 'review' field (used for Feedback)
+		pushFields["review"] = review 
 	}
 
-	// Define the filter to find the document by sessionId
-	filter := bson.M{"sessionid": sessionId}
+	// Only add $push to the update if there are fields to push
+	if len(pushFields) > 0 {
+		updateDoc["$push"] = pushFields
+	}
 
-	// Find and update the document
+	// 4. Define Filter and Options
+	filter := bson.M{"sessionid": sessionId}
+	
+	// Return the document *after* the update is applied
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	// 5. Execute Update
 	var updatedQuestion models.Question
-	err = QuestionCollection.FindOneAndUpdate(context.TODO(), filter, updateFields, opts).Decode(&updatedQuestion)
+	err = QuestionCollection.FindOneAndUpdate(ctx, filter, updateDoc, opts).Decode(&updatedQuestion)
+	
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("question not found")
+			return nil, fmt.Errorf("question document not found for session %s", sessionIdStr)
 		}
-		return nil, fmt.Errorf("failed to update question: %v", err)
+		return nil, fmt.Errorf("database error during update: %v", err)
 	}
 
 	return &updatedQuestion, nil
 }
 
 func GetQuestion(sessionIdStr string) (*models.Question, error) {
+	// 1. Validate Session ID
 	sessionId, err := primitive.ObjectIDFromHex(sessionIdStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid session ID: %v", err)
+		return nil, fmt.Errorf("invalid session ID format: %v", err)
 	}
 
-	// Define the filter to find the document by sessionId
-	filter := bson.M{"sessionid": sessionId}
+	// 2. Prepare Context
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
+	// 3. Find Document
+	filter := bson.M{"sessionid": sessionId}
 	var question models.Question
-	err = QuestionCollection.FindOne(context.TODO(), filter).Decode(&question)
+	
+	err = QuestionCollection.FindOne(ctx, filter).Decode(&question)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("question not found")
+			return nil, fmt.Errorf("no question history found for session %s", sessionIdStr)
 		}
 		return nil, fmt.Errorf("failed to fetch question: %v", err)
 	}

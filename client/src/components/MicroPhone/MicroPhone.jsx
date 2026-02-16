@@ -1,65 +1,73 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { Mic, MicOff, RotateCcw } from "lucide-react";
 
-const MicroPhone = (props) => {
-  const {
-    iconSize = 32,
-    setUserTranscript = null,
-    setInterviewerStatus = null,
-  } = props;
-
+const MicroPhone = ({
+  iconSize = 32,
+  setUserTranscript = null,
+  // setInterviewerStatus, // Removed because it was unused in your logic
+}) => {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [browserSupport, setBrowserSupport] = useState(true);
-  
+
   const recognitionRef = useRef(null);
 
-  // Initialize speech recognition on component mount
   useEffect(() => {
     // Check browser support
-    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
       console.warn("Browser doesn't support speech recognition.");
       setBrowserSupport(false);
       return;
     }
 
     // Create recognition instance
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognitionRef.current = new SpeechRecognition();
-    
+    const recognition = recognitionRef.current;
+
     // Configure recognition
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = true;
-    recognitionRef.current.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
     // Set up event handlers
-    recognitionRef.current.onstart = () => {
+    recognition.onstart = () => {
       setListening(true);
       console.log("Listening started...");
     };
 
-    recognitionRef.current.onend = () => {
+    recognition.onend = () => {
       setListening(false);
       console.log("Listening stopped...");
     };
 
-    recognitionRef.current.onresult = (event) => {
-      let finalTranscript = '';
-      
+    recognition.onresult = (event) => {
+      let interimTranscript = '';
+      let finalTranscriptChunk = '';
+
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
+        const transcriptSegment = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
+          finalTranscriptChunk += transcriptSegment + ' ';
+        } else {
+          interimTranscript += transcriptSegment;
         }
       }
-      
-      if (finalTranscript) {
-        setTranscript(prev => prev + finalTranscript);
+
+      if (finalTranscriptChunk) {
+        // We use functional state update to ensure we don't lose previous text
+        setTranscript(prev => prev + finalTranscriptChunk);
       }
+      
+      // Optional: If you want to show real-time interim results, 
+      // you would handle interimTranscript here. 
     };
 
-    recognitionRef.current.onerror = (event) => {
+    recognition.onerror = (event) => {
       console.error("Speech recognition error", event.error);
+      setListening(false);
     };
 
     // Clean up on unmount
@@ -70,7 +78,7 @@ const MicroPhone = (props) => {
     };
   }, []);
 
-  // Update parent component with transcript when it changes
+  // Sync with parent component
   useEffect(() => {
     if (setUserTranscript) {
       setUserTranscript(transcript);
@@ -78,35 +86,39 @@ const MicroPhone = (props) => {
   }, [transcript, setUserTranscript]);
 
   const startListening = () => {
-    if (recognitionRef.current) {
+    if (recognitionRef.current && !listening) {
       try {
         recognitionRef.current.start();
       } catch (error) {
-        // Handle the case where recognition is already started
         console.error("Error starting recognition:", error);
       }
     }
   };
 
   const stopListening = () => {
-    if (recognitionRef.current) {
+    if (recognitionRef.current && listening) {
       recognitionRef.current.stop();
     }
   };
 
   const resetTranscript = () => {
     setTranscript("");
+    if (recognitionRef.current && listening) {
+        // Optional: restart recognition to clear internal buffer
+        recognitionRef.current.stop(); 
+        // Note: onend will trigger, and you might need to manually restart if continuous listening is desired immediately
+    }
   };
 
   if (!browserSupport) {
-    return <span>Browser doesn't support speech recognition.</span>;
+    return <span>Browser doesn&apos;t support speech recognition.</span>;
   }
 
   return (
     <div className="flex items-center justify-center">
       <div className="flex flex-col items-center justify-center p-2">
         <div className="flex gap-5 justify-center items-center">
-          {/* Mic control: toggle between listening and not listening */}
+          {/* Mic control */}
           <div className="p-2 bg-gray-900 rounded-md cursor-pointer m-2 hover:shadow-[rgba(7,_65,_210,_0.5)_0px_9px_30px]">
             {listening ? (
               <Mic
@@ -122,7 +134,8 @@ const MicroPhone = (props) => {
               />
             )}
           </div>
-          {/* Reset the transcript */}
+          
+          {/* Reset control */}
           <div
             onClick={resetTranscript}
             className="px-2 pt-2 rounded-md bg-gray-900 hover:shadow-[rgba(7,_65,_210,_0.5)_0px_9px_30px] cursor-pointer"
@@ -132,7 +145,8 @@ const MicroPhone = (props) => {
             </div>
           </div>
         </div>
-        {/* Display the transcript */}
+
+        {/* Display transcript only if parent isn't handling it */}
         {!setUserTranscript && (
           <p className="text-justify my-2 px-4 overflow-y-scroll capitalize text-white">
             {transcript}
@@ -141,6 +155,13 @@ const MicroPhone = (props) => {
       </div>
     </div>
   );
+};
+
+// Define PropTypes
+MicroPhone.propTypes = {
+  iconSize: PropTypes.number,
+  setUserTranscript: PropTypes.func,
+  setInterviewerStatus: PropTypes.func, // Kept in propTypes as optional if you decide to use it later
 };
 
 export default MicroPhone;
