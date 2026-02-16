@@ -1,1 +1,1 @@
-export const LOCAL_SERVER = "https://techprep-server.raushan.info";
+export const LOCAL_SERVER = "http://localhost:8080";

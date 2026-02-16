@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { toast } from "sonner";
 import { Upload, FileText } from "lucide-react";
+import { LOCAL_SERVER } from "@/constant.js";
 
 const FileUploadForm = ({ setDetails }) => {
+	const SERVER = import.meta.env.VITE_SERVER || LOCAL_SERVER;
 	const [file, setFile] = useState(null);
 	const [isDragging, setIsDragging] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +57,7 @@ const FileUploadForm = ({ setDetails }) => {
 
 		try {
 			const response = await axios.post(
-				`https://techprep-resume-analyzer.vercel.app/upload`,
+				`${SERVER}/api/v1/upload`,
 				formData,
 				{
 					headers: {
@@ -65,11 +67,11 @@ const FileUploadForm = ({ setDetails }) => {
 			);
 
 			toast.success("Resume parsed successfully!");
-			console.log("Upload response:", response.data.result);
+			console.log("Upload response:", response.data);
 
 			// Reset file after successful upload
 			setFile(null);
-			setStates(response.data.result);
+			setStates(response.data.data);
 			if (fileInputRef.current) {
 				fileInputRef.current.value = "";
 			}
@@ -90,7 +92,7 @@ const FileUploadForm = ({ setDetails }) => {
 			techStacks: response.techStacks || [],
 			experience: response.experience || "",
 		}));
-		response.projects.map((project, index) => {
+		response.projects.forEach((project, index) => {
 			setDetails(prev => ({
 				...prev,
 				projects: [...prev.projects, {
@@ -114,7 +116,6 @@ const FileUploadForm = ({ setDetails }) => {
 			transition={{ duration: 0.5 }}
 			className="max-w-2xl mx-auto px-6 pt-32 pb-8"
 		>
-			{/* Drag & Drop Area */}
 			<div
 				className={`relative border border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer ${
 					isDragging
@@ -135,12 +136,10 @@ const FileUploadForm = ({ setDetails }) => {
 				/>
 
 				<div className="flex flex-col items-center">
-					{/* Icon */}
 					<div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4">
 						<Upload className="w-5 h-5 text-gray-400" />
 					</div>
 
-					{/* Text */}
 					{file ? (
 						<div className="flex items-center gap-3">
 							<FileText className="w-5 h-5 text-indigo-400" />
@@ -166,7 +165,6 @@ const FileUploadForm = ({ setDetails }) => {
 				</div>
 			</div>
 
-			{/* Upload Button */}
 			{file && (
 				<motion.button
 					initial={{ opacity: 0, y: 10 }}
@@ -191,7 +189,6 @@ const FileUploadForm = ({ setDetails }) => {
 				</motion.button>
 			)}
 
-			{/* Separator */}
 			<div className="relative flex items-center mt-6">
 				<div className="flex-grow border-t border-white/10"></div>
 				<span className="flex-shrink mx-4 text-gray-500 text-xl uppercase tracking-wider">
