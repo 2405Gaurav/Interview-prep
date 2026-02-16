@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
+
 	"github.com/rnkp755/mockinterviewBackend/db"
 	"github.com/rnkp755/mockinterviewBackend/models"
 	"github.com/rnkp755/mockinterviewBackend/utils"
@@ -24,15 +24,17 @@ var SessionCollection *mongo.Collection
 
 func init() {
 
-	if os.Getenv("DB_NAME") != "production" {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file")
-		}
-	}
 	colName := os.Getenv("SESSION_COLLECTION_NAME")
+	if colName == "" {
+		log.Println("Warning: SESSION_COLLECTION_NAME not set. Session features may not work.")
+		return
+	}
 
 	SessionCollection = db.ConnectToDb(colName)
+
+	if SessionCollection == nil {
+		log.Println("Warning: Failed to initialize SessionCollection")
+	}
 }
 
 func createNewSession(session models.Session) (primitive.ObjectID, error) {

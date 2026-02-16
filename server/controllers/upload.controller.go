@@ -8,31 +8,51 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/rnkp755/mockinterviewBackend/utils"
 	"google.golang.org/api/option"
 )
 
-func UploadResume(w http.ResponseWriter, r *http.Request) {
-	// Enable CORS
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+var resumeClient *genai.Client
+var resumeModel *genai.GenerativeModel
 
-	if r.Method == "OPTIONS" {
+func init() {
+	apiKey := os.Getenv("GEMINI_API_KEY")
+	if apiKey == "" {
+		return
+	}
+
+	ctx := context.Background()
+	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+	if err != nil {
+		return
+	}
+
+	resumeClient = client
+	resumeModel = client.GenerativeModel("gemini-2.5-flash")
+}
+
+func UploadResume(w http.ResponseWriter, r *http.Request) {
+
+	// Handle preflight
+	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
+	if r.Method != http.MethodPost {
+		utils.ErrorResponse(w, http.StatusMethodNotAllowed, "Invalid request method")
+		return
+	}
+
 	// Parse multipart form (max 10MB)
-	err := r.ParseMultipartForm(10 << 20)
-	if err != nil {
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, "Failed to parse form")
 		return
 	}
 
-	// Get the file from form
 	file, handler, err := r.FormFile("file")
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusBadRequest, "Failed to get file")
@@ -40,23 +60,23 @@ func UploadResume(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Validate file type
+	// Validate file type by extension
 	if !strings.HasSuffix(strings.ToLower(handler.Filename), ".pdf") {
 		utils.ErrorResponse(w, http.StatusBadRequest, "Only PDF files are allowed")
 		return
 	}
 
-	// Read file content
+	// Read file bytes
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to read file")
 		return
 	}
 
-	// Parse resume using Gemini
+	// Parse with Gemini
 	resumeData, err := parseResumeWithGemini(fileBytes)
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, fmt.Sprintf("Failed to parse resume: %v", err))
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -64,23 +84,16 @@ func UploadResume(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseResumeWithGemini(fileBytes []byte) (map[string]interface{}, error) {
-	ctx := context.Background()
 
-	// Get API key from environment
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("GEMINI_API_KEY not set")
+	if resumeModel == nil {
+		return nil, fmt.Errorf("Gemini not initialized")
 	}
 
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	model := client.GenerativeModel("gemini-2.5-flash")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
 	prompt := `Extract information from this resume PDF and return ONLY a valid JSON object:
+
 {
   "name": "Full Name",
   "techStacks": ["Tech1", "Tech2"],
@@ -94,9 +107,9 @@ func parseResumeWithGemini(fileBytes []byte) (map[string]interface{}, error) {
   ]
 }
 
-Return only the JSON, no markdown formatting.`
+Return only the JSON. No markdown formatting.`
 
-	resp, err := model.GenerateContent(
+	resp, err := resumeModel.GenerateContent(
 		ctx,
 		genai.Text(prompt),
 		genai.Blob{
@@ -105,15 +118,20 @@ Return only the JSON, no markdown formatting.`
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Gemini request failed: %v", err)
 	}
 
-	// Validate response
-	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
-		return nil, fmt.Errorf("no response from Gemini")
+	if len(resp.Candidates) == 0 ||
+		len(resp.Candidates[0].Content.Parts) == 0 {
+		return nil, fmt.Errorf("empty response from Gemini")
 	}
 
-	responseText := fmt.Sprintf("%v", resp.Candidates[0].Content.Parts[0])
+	textPart, ok := resp.Candidates[0].Content.Parts[0].(genai.Text)
+	if !ok {
+		return nil, fmt.Errorf("unexpected Gemini response format")
+	}
+
+	responseText := string(textPart)
 
 	// Clean markdown formatting if present
 	responseText = strings.TrimPrefix(responseText, "```json")
@@ -121,11 +139,9 @@ Return only the JSON, no markdown formatting.`
 	responseText = strings.TrimSuffix(responseText, "```")
 	responseText = strings.TrimSpace(responseText)
 
-	// Parse JSON
 	var result map[string]interface{}
-	err = json.Unmarshal([]byte(responseText), &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse AI response: %v", err)
+	if err := json.Unmarshal([]byte(responseText), &result); err != nil {
+		return nil, fmt.Errorf("invalid JSON from Gemini: %v", err)
 	}
 
 	return result, nil

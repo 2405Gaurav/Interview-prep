@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/rnkp755/mockinterviewBackend/routes"
@@ -12,52 +12,53 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting the backend server for the mockinterview app...")
 
-	// Initialize router
-	r := routes.Router()
-
-	// Load environment variables from the .env file
-	// In a production environment (like Render), variables are set directly.
-	// The .env file is only for local development.
+	// Load .env only in local development
 	if os.Getenv("GO_ENV") != "production" {
-		err := godotenv.Load()
-		if err != nil {
-			log.Println("Warning: Could not load .env file. Using environment variables from the system.")
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found. Using system environment variables.")
 		}
 	}
 
-	// Retrieve port from environment variables
-	PORT := os.Getenv("PORT")
-	if PORT == "" {
-		log.Fatal("PORT environment variable is not set")
+	// Get PORT (Render injects this automatically)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // fallback for local dev
 	}
 
-	// // Configure CORS options
-	// c := cors.New(cors.Options{
-	// 	AllowedOrigins:   []string{os.Getenv("FRONTEND_URL_DEVELOPMENT"), os.Getenv("FRONTEND_URL_PRODUCTION_ONE"), os.Getenv("FRONTEND_URL_PRODUCTION_TWO")}, // Add your allowed origins here
-	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},                                                                                            // Add your allowed methods here
-	// 	AllowedHeaders:   []string{"Content-Type", "Authorization"},                                                                                           // Add your allowed headers here
-	// 	AllowCredentials: true,                                                                                                                                // Set to true if you need to send cookies
-	// })
+	// Initialize router
+	router := routes.Router()
 
-c := cors.New(cors.Options{
-    AllowedOrigins: []string{
-        os.Getenv("FRONTEND_URL"),
-        "http://localhost:5173",
-    },
-    AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-    AllowedHeaders: []string{"Content-Type", "Authorization"},
-    AllowCredentials: true,
-})
+	// Configure CORS
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins: []string{
+			os.Getenv("FRONTEND_URL"),
+			"http://localhost:5173",
+		},
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowCredentials: true,
+	})
 
-	// Wrap router with CORS middleware
-	handler := c.Handler(r)
+	handler := corsHandler.Handler(router)
 
-	fmt.Println("Server is starting on port:", PORT)
+	server := &http.Server{
+		Addr:         ":" + port,
+		Handler:      handler,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
 
-	// Start the server
-	if err := http.ListenAndServe(":"+PORT, handler); err != nil {
-		log.Fatal("Failed to start the server:", err)
+	log.Println("Server running on port:", port)
+
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatal("Server failed:", err)
 	}
 }

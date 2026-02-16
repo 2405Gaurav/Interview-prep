@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
+	
 	"github.com/rnkp755/mockinterviewBackend/db"
 	"github.com/rnkp755/mockinterviewBackend/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -19,21 +19,17 @@ import (
 var QuestionCollection *mongo.Collection
 
 func init() {
-	// 1. Load Environment Variables
-	if os.Getenv("DB_NAME") != "production" {
-		if err := godotenv.Load(); err != nil {
-			log.Println("Warning: Error loading .env file in Question Controller")
-		}
-	}
-
-	// 2. Initialize Database Connection
 	colName := os.Getenv("QUESTION_COLLECTION_NAME")
 	if colName == "" {
-		log.Fatal("QUESTION_COLLECTION_NAME is not set in environment variables")
+		log.Println("Warning: QUESTION_COLLECTION_NAME not set. Question features will not work.")
+		return
 	}
 
-	// Assuming db.ConnectToDb returns *mongo.Collection
 	QuestionCollection = db.ConnectToDb(colName)
+
+	if QuestionCollection == nil {
+		log.Println("Warning: Failed to initialize QuestionCollection")
+	}
 }
 
 func AddQuestion(question models.Question) (*models.Question, error) {

@@ -31,27 +31,21 @@ type GeminiRequest struct {
 }
 
 func init() {
-	if os.Getenv("DB_NAME") != "production" {
-		if err := godotenv.Load(); err != nil {
-			log.Println("Warning: Error loading .env file")
-		}
-	}
+	ctx := context.Background()
 
 	apiKey := os.Getenv("GEMINI_API_KEY")
 	if apiKey == "" {
-		log.Fatal("GEMINI_API_KEY not set in environment variables")
+		log.Println("Warning: GEMINI_API_KEY not set. Gemini features will not work.")
+		return
 	}
 
-	ctx := context.Background()
 	var err error
 	client, err = genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
-		log.Fatalf("Failed to create Gemini client: %v", err)
+		log.Println("Failed to create Gemini client:", err)
+		return
 	}
 
-	// USE A STABLE MODEL NAME
-	// "gemini-2.0-flash" might cause 404s if not available in your region/account yet.
-	// Safe bet: "gemini-1.5-flash" or "gemini-2.0-flash-exp"
 	model = client.GenerativeModel("gemini-2.5-flash")
 }
 
