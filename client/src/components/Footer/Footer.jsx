@@ -1,28 +1,23 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Terminal, Linkedin, Github, Instagram, Globe } from "lucide-react";
+import { Terminal, Linkedin, Github, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Footer = () => {
     const socialLinks = [
         {
             icon: Linkedin,
-            href: "https://www.linkedin.com/in/rnkp755/",
+            href: "https://www.linkedin.com/in/2405Gaurav/",
             ariaLabel: "LinkedIn Profile",
         },
         {
             icon: Github,
-            href: "https://github.com/rnkp755",
+            href: "https://github.com/2405Gaurav",
             ariaLabel: "GitHub Profile",
         },
         {
-            icon: Instagram,
-            href: "https://www.instagram.com/rnkp755/",
-            ariaLabel: "Instagram Profile",
-        },
-        {
             icon: Globe,
-            href: "https://www.raushan.info/",
+            href: "https://thegauravthakur.in/",
             ariaLabel: "Personal Website",
         },
     ];
