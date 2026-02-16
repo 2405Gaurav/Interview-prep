@@ -149,7 +149,7 @@ const Form = () => {
 			/>
 
 			{/* --- FORM CONTENT --- */}
-			<div className="relative z-10 container mx-auto px-6 py-24">
+			<div className="relative z-10 container mx-auto px-6 py-15">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}

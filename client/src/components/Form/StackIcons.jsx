@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { motion } from "framer-motion";
 import StackIcon from "tech-stack-icons";
+import { ChevronDown, ChevronUp, Check } from "lucide-react";
 
 const icons = [
   "c++",
@@ -68,6 +71,7 @@ const icons = [
   "jest",
   "webassembly",
 ];
+
 const TechStackNames = [
   "C++",
   "Java",
@@ -136,8 +140,9 @@ const TechStackNames = [
   "WebAssembly",
 ];
 
-const StackIcons = (props) => {
-  const { details, setDetails } = props;
+const StackIcons = ({ details, setDetails }) => {
+  const [visibleIconsCount, setVisibleIconsCount] = useState(18);
+
   const updateTechStacks = (index) => {
     const techStack = TechStackNames[index];
     if (details.techStacks.includes(techStack)) {
@@ -155,7 +160,6 @@ const StackIcons = (props) => {
     }
   };
 
-  const [visibleIconsCount, setVisibleIconsCount] = useState(18);
   const toggleVisibleIcons = (e) => {
     e.preventDefault();
     if (visibleIconsCount === 18) {
@@ -166,89 +170,77 @@ const StackIcons = (props) => {
   };
 
   return (
-    <div className="flex-cols">
-      <div className="flex flex-wrap items-center justify-around">
+    <div className="w-full">
+      {/* Tech Stack Grid */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
         {icons.slice(0, visibleIconsCount).map((icon, index) => {
+          const isSelected = details.techStacks.includes(TechStackNames[index]);
+          
           return (
-            <div
+            <motion.div
               key={index}
               onClick={() => updateTechStacks(index)}
-              className="flex-col m-1 bg-slate-100 p-2 rounded-lg cursor-pointer hover:scale-105 hover:ring-4 ring-blue-500 ring-inset transition-all"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`relative flex flex-col items-center gap-2 p-3 rounded-lg cursor-pointer transition-all duration-300 ${
+                isSelected
+                  ? "bg-gradient-to-br from-indigo-600/20 to-purple-600/20 border-2 border-indigo-500/50 shadow-lg shadow-indigo-500/20"
+                  : "bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20"
+              }`}
             >
-              {details.techStacks.includes(TechStackNames[index]) && (
-                <div className="float-start mr-[-2rem]">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="green"
-                    className="size-8"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                </div>
+              {/* Selected Check Mark */}
+              {isSelected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg"
+                >
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </motion.div>
               )}
-              <StackIcon name={icon} className="" />
-              <p className="text-black font-bold text-center text-md">
+
+              {/* Icon */}
+              <div className="w-10 h-10 flex items-center justify-center">
+                <StackIcon name={icon} className="w-full h-full" />
+              </div>
+
+              {/* Tech Name */}
+              <p className="text-xs text-center text-gray-300 font-medium leading-tight line-clamp-2">
                 {TechStackNames[index]}
               </p>
-            </div>
+            </motion.div>
           );
         })}
       </div>
 
-      <div className="flex justify-center items-center mt-2">
-        {visibleIconsCount === 18 ? (
-          <div
-            className="flex justify-center items-center cursor-pointer px-2"
-            onClick={toggleVisibleIcons}
-          >
-            <div className="text-white mt-2">View More</div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 16 16"
-              strokeWidth={1.0}
-              stroke="white"
-              className="size-5 ml-2 overflow-visible"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5"
-              />
-            </svg>
-          </div>
-        ) : (
-          <div
-            className="flex justify-center items-center cursor-pointer"
-            onClick={toggleVisibleIcons}
-          >
-            <span className="text-white mt-2">Collapse</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 16 16"
-              strokeWidth={1.5}
-              stroke="white"
-              className="size-5 ml-2 overflow-visible"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m19.5 18.75-7.5-7.5-7.5 7.5m15-6-7.5-7.5-7.5 7.5"
-              />
-            </svg>
-          </div>
-        )}
+      {/* Toggle Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={toggleVisibleIcons}
+          className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-300 hover:bg-white/10 hover:border-indigo-500/50 transition-all duration-300"
+        >
+          {visibleIconsCount === 18 ? (
+            <>
+              <span>Show More</span>
+              <ChevronDown className="w-4 h-4" />
+            </>
+          ) : (
+            <>
+              <span>Show Less</span>
+              <ChevronUp className="w-4 h-4" />
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
+};
+
+StackIcons.propTypes = {
+  details: PropTypes.shape({
+    techStacks: PropTypes.arrayOf(PropTypes.string).isRequired,
+  }).isRequired,
+  setDetails: PropTypes.func.isRequired,
 };
 
 export default StackIcons;
