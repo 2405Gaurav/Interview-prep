@@ -9,6 +9,10 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"os"
+
+	"github.com/joho/godotenv"
+	"google.golang.org/api/option"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/gorilla/mux"
