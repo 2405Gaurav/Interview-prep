@@ -1,4 +1,4 @@
-# 🚀 PREPGT – AI-Powered Technical Interview Ecosystem
+# 🚀 InterviewPrep.AI – AI-Powered Technical Interview Ecosystem
 
 ## 🌐 Live Application  
 **Production URL:** https://prepgt.vercel.app  
