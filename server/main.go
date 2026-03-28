@@ -40,7 +40,7 @@ func main() {
 
 	// CORS origins
 	origins := []string{
-		"https://prepai.thegauravthakur.in/",
+		"https://prepai.thegauravthakur.in",
 		"http://localhost:5173",
 	}
 
