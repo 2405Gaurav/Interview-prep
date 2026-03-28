@@ -7,35 +7,49 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/rnkp755/mockinterviewBackend/controllers"
 	"github.com/rnkp755/mockinterviewBackend/routes"
 	"github.com/rs/cors"
 )
 
 func main() {
 
-	// Load .env only in local development
+	// Load .env for local dev
 	if os.Getenv("GO_ENV") != "production" {
 		if err := godotenv.Load(); err != nil {
-			log.Println("No .env file found. Using system environment variables.")
+			log.Println("⚠️ No .env file found, using system env")
 		}
 	}
 
-	// Get PORT (Render injects this automatically)
+	// Init Gemini (IMPORTANT)
+	controllers.InitGemini()
+	log.Println("✅ Gemini initialized")
+	controllers.InitSessionCollection()
+	log.Println("session done")
+	controllers.InitQuestionCollection()
+	log.Println("question started asking")
+
+	// Port
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080" // fallback for local dev
+		port = "8080"
 	}
 
-	// Initialize router
+	// Router
 	router := routes.Router()
 
-	// Configure CORS
+	// CORS origins
+	origins := []string{
+		"https://interview-prep-gt.vercel.app",
+		"http://localhost:5173",
+	}
+
+	if frontend := os.Getenv("FRONTEND_URL"); frontend != "" {
+		origins = append(origins, frontend)
+	}
+
 	corsHandler := cors.New(cors.Options{
-		AllowedOrigins: []string{
-			"https://interview-prep-gt.vercel.app",
-			os.Getenv("FRONTEND_URL"),
-			"http://localhost:5173",
-		},
+		AllowedOrigins: origins,
 		AllowedMethods: []string{
 			http.MethodGet,
 			http.MethodPost,
@@ -57,9 +71,7 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	log.Println("Server running on port:", port)
+	log.Println("🚀 Server running on port:", port)
 
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatal("Server failed:", err)
-	}
+	log.Fatal(server.ListenAndServe())
 }

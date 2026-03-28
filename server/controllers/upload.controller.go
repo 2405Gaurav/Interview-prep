@@ -6,33 +6,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/google/generative-ai-go/genai"
 	"github.com/rnkp755/mockinterviewBackend/utils"
-	"google.golang.org/api/option"
 )
-
-var resumeClient *genai.Client
-var resumeModel *genai.GenerativeModel
-
-func init() {
-	apiKey := os.Getenv("GEMINI_API_KEY")
-	if apiKey == "" {
-		return
-	}
-
-	ctx := context.Background()
-	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
-	if err != nil {
-		return
-	}
-
-	resumeClient = client
-	resumeModel = client.GenerativeModel("gemini-2.5-flash")
-}
 
 func UploadResume(w http.ResponseWriter, r *http.Request) {
 
@@ -60,13 +39,13 @@ func UploadResume(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Validate file type by extension
+	// Validate file type
 	if !strings.HasSuffix(strings.ToLower(handler.Filename), ".pdf") {
 		utils.ErrorResponse(w, http.StatusBadRequest, "Only PDF files are allowed")
 		return
 	}
 
-	// Read file bytes
+	// Read file
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to read file")
@@ -85,7 +64,8 @@ func UploadResume(w http.ResponseWriter, r *http.Request) {
 
 func parseResumeWithGemini(fileBytes []byte) (map[string]interface{}, error) {
 
-	if resumeModel == nil {
+	// ✅ Use global model
+	if GeminiModel == nil {
 		return nil, fmt.Errorf("Gemini not initialized")
 	}
 
@@ -109,7 +89,7 @@ func parseResumeWithGemini(fileBytes []byte) (map[string]interface{}, error) {
 
 Return only the JSON. No markdown formatting.`
 
-	resp, err := resumeModel.GenerateContent(
+	resp, err := GeminiModel.GenerateContent(
 		ctx,
 		genai.Text(prompt),
 		genai.Blob{
@@ -121,8 +101,7 @@ Return only the JSON. No markdown formatting.`
 		return nil, fmt.Errorf("Gemini request failed: %v", err)
 	}
 
-	if len(resp.Candidates) == 0 ||
-		len(resp.Candidates[0].Content.Parts) == 0 {
+	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
 		return nil, fmt.Errorf("empty response from Gemini")
 	}
 
@@ -133,7 +112,7 @@ Return only the JSON. No markdown formatting.`
 
 	responseText := string(textPart)
 
-	// Clean markdown formatting if present
+	// Clean markdown
 	responseText = strings.TrimPrefix(responseText, "```json")
 	responseText = strings.TrimPrefix(responseText, "```")
 	responseText = strings.TrimSuffix(responseText, "```")

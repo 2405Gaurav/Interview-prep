@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/gorilla/mux"
 
-	"github.com/rnkp755/mockinterviewBackend/db"
 	"github.com/rnkp755/mockinterviewBackend/models"
 	"github.com/rnkp755/mockinterviewBackend/utils"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,25 +18,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var SessionCollection *mongo.Collection
-
-func init() {
-
-	colName := os.Getenv("SESSION_COLLECTION_NAME")
-	if colName == "" {
-		log.Println("Warning: SESSION_COLLECTION_NAME not set. Session features may not work.")
-		return
-	}
-
-	SessionCollection = db.ConnectToDb(colName)
-
-	if SessionCollection == nil {
-		log.Println("Warning: Failed to initialize SessionCollection")
-	}
-}
 
 func createNewSession(session models.Session) (primitive.ObjectID, error) {
+
+	// ✅ SAFETY CHECK
+	if SessionCollection == nil {
+		return primitive.NilObjectID, fmt.Errorf("database not initialized")
+	}
+
 	fmt.Println("Creating new session ...", SessionCollection)
+
 	result, err := SessionCollection.InsertOne(context.TODO(), session)
 	if err != nil {
 		log.Println("Failed to insert session: ", err)
@@ -52,7 +41,6 @@ func createNewSession(session models.Session) (primitive.ObjectID, error) {
 
 func CreateSession(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Allow-Control-Allow-Methods", "POST")
 
 	var session models.Session
 
@@ -67,32 +55,20 @@ func CreateSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionId, err := createNewSession(session)
-
 	if err != nil {
-		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to create session")
+		utils.ErrorResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	/*
-		Set or update the "_id" cookie with the sessionId.Hex()
-		cookie := &http.Cookie{
-			Name:     "_id",
-			Value:    sessionId.Hex(),
-			Path:     "/",
-			Domain:   "localhost:5173", // Include a leading dot to allow subdomains
-			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteNoneMode, // Allows the cookie to be sent cross-site
-			Expires:  time.Now().Add(7 * 24 * time.Hour),
-		}
-
-		http.SetCookie(w, cookie)
-	*/
 
 	utils.SuccessResponse(w, "Session created successfully", sessionId.Hex())
 }
 
 func GetSession(sessionId string) (*models.Session, error) {
+
+	if SessionCollection == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
 	objectId, err := primitive.ObjectIDFromHex(sessionId)
 	if err != nil {
 		return nil, fmt.Errorf("invalid session ID: %v", err)
@@ -111,74 +87,70 @@ func GetSession(sessionId string) (*models.Session, error) {
 }
 
 func UpdateSession(sessionId string, updateFields bson.M) (*models.Session, error) {
+
+	if SessionCollection == nil {
+		return nil, fmt.Errorf("database not initialized")
+	}
+
 	objectId, err := primitive.ObjectIDFromHex(sessionId)
 	if err != nil {
 		return nil, fmt.Errorf("invalid session ID: %v", err)
 	}
 
-	// Fetch session details from the database
 	session, err := GetSession(sessionId)
-
 	if err != nil {
 		return nil, fmt.Errorf("session not found")
 	}
 
 	if session.InterviewStatus == models.Ended {
 		return session, nil
-	} else {
-
-		// Add UpdatedAt field to the updateFields
-		updateFields["updatedAt"] = time.Now()
-
-		update := bson.M{
-			"$set": updateFields,
-		}
-
-		// Perform the update
-		opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
-		var updatedSession models.Session
-		err = SessionCollection.FindOneAndUpdate(context.TODO(), bson.M{"_id": objectId}, update, opts).Decode(&updatedSession)
-		if err != nil {
-			if err == mongo.ErrNoDocuments {
-				return nil, fmt.Errorf("session not found")
-			}
-			return nil, fmt.Errorf("failed to update session: %v", err)
-		}
-
-		return &updatedSession, nil
 	}
+
+	updateFields["updatedAt"] = time.Now()
+
+	update := bson.M{
+		"$set": updateFields,
+	}
+
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+
+	var updatedSession models.Session
+	err = SessionCollection.FindOneAndUpdate(
+		context.TODO(),
+		bson.M{"_id": objectId},
+		update,
+		opts,
+	).Decode(&updatedSession)
+
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("session not found")
+		}
+		return nil, fmt.Errorf("failed to update session: %v", err)
+	}
+
+	return &updatedSession, nil
 }
 
 func EndSession(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Allow-Control-Allow-Methods", "POST")
 
-	// Extract sessionId from URL like /session/{sessionId}
 	vars := mux.Vars(r)
 	sessionId := vars["sessionId"]
 
-	// Add logic for ending session
-	updatedSession, err := UpdateSession(sessionId,
-		bson.M{
-			"interviewstatus": "ended",
-		},
-	)
-
+	updatedSession, err := UpdateSession(sessionId, bson.M{
+		"interviewstatus": "ended",
+	})
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to end session")
 		return
 	}
 
-	var questions *models.Question
-	questions, err = GetQuestion(updatedSession.ID.Hex())
-
+	questions, err := GetQuestion(updatedSession.ID.Hex())
 	if err != nil {
 		utils.ErrorResponse(w, http.StatusInternalServerError, "Failed to generate report")
 		return
 	}
-
-	// Print the report
-	fmt.Println(questions)
 
 	response := map[string]interface{}{
 		"session":   updatedSession,
