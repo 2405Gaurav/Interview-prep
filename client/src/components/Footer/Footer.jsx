@@ -1,70 +1,50 @@
 import { motion } from "framer-motion";
 import { Terminal, Linkedin, Github, Globe } from "lucide-react";
 
-const Footer = () => {
-    const socialLinks = [
-        {
-            icon: Linkedin,
-            href: "https://www.linkedin.com/in/2405Gaurav/",
-            ariaLabel: "LinkedIn Profile",
-        },
-        {
-            icon: Github,
-            href: "https://github.com/2405Gaurav",
-            ariaLabel: "GitHub Profile",
-        },
-        {
-            icon: Globe,
-            href: "https://thegauravthakur.in/",
-            ariaLabel: "Personal Website",
-        },
-    ];
+const socialLinks = [
+  { icon: Linkedin, href: "https://www.linkedin.com/in/2405Gaurav/", label: "LinkedIn" },
+  { icon: Github,   href: "https://github.com/2405Gaurav",           label: "GitHub"   },
+  { icon: Globe,    href: "https://thegauravthakur.in/",              label: "Website"  },
+];
 
-    return (
-        <footer className="relative bg-[#050505] text-white py-8 border-t border-white/5">
-            {/* Subtle gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-indigo-600/5 to-transparent pointer-events-none" />
-            
-            <div className="relative container mx-auto px-6 flex flex-col md:flex-row items-center justify-between">
-                {/* Logo and Platform Name */}
-                <div className="flex items-center mb-6 md:mb-0">
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md mr-3">
-                        <Terminal className="w-5 h-5 text-indigo-400" />
-                    </div>
-                    <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                        interviewPrep.ai
-                    </span>
-                </div>
+const Footer = () => (
+  <footer className="relative border-t border-white/[0.04] bg-[#050505]">
+    <div className="mx-auto max-w-7xl px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
 
-                {/* Social Links */}
-                <div className="flex gap-3 mb-6 md:mb-0">
-                    {socialLinks.map((social, index) => (
-                        <motion.a
-                            key={index}
-                            href={social.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={social.ariaLabel}
-                            className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md hover:bg-white/10 hover:border-indigo-500/50 transition-all duration-300 group"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <social.icon className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
-                        </motion.a>
-                    ))}
-                </div>
+      {/* Logo */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-md bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+          <Terminal className="w-3.5 h-3.5 text-white/30" />
+        </div>
+        <span className="text-xs font-medium tracking-tight text-white/25">
+          interviewPrep<span className="text-cyan-400/40 font-mono">.AI</span>
+        </span>
+      </div>
 
-                {/* Made with Love */}
-            </div>
+      {/* Copyright */}
+      <p className="text-[10px] font-mono text-white/15 tracking-wider">
+        © {new Date().getFullYear()} interviewPrep.AI
+      </p>
 
-            {/* Copyright and Additional Info */}
-            <div className="relative text-center text-xs text-gray-600 mt-6 pt-6 border-t border-white/5">
-                <p className="font-light tracking-wide">
-                    © {new Date().getFullYear()} interviewPrep.AI All rights reserved.
-                </p>
-            </div>
-        </footer>
-    );
-};
+      {/* Socials */}
+      <div className="flex items-center gap-2">
+        {socialLinks.map(({ icon: Icon, href, label }) => (
+          <motion.a
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={label}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            className="w-7 h-7 rounded-md bg-white/[0.03] border border-white/[0.07] flex items-center justify-center hover:bg-white/[0.07] hover:border-white/15 transition-all duration-200 group"
+          >
+            <Icon className="w-3 h-3 text-white/25 group-hover:text-white/60 transition-colors" />
+          </motion.a>
+        ))}
+      </div>
+    </div>
+  </footer>
+);
 
 export default Footer;
