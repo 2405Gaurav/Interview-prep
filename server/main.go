@@ -40,7 +40,7 @@ func main() {
 
 	// CORS origins
 	origins := []string{
-		"https://interview-prep-gt.vercel.app",
+		"https://prepai.thegauravthakur.in/",
 		"http://localhost:5173",
 	}
 
