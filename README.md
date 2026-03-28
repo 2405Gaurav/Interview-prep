@@ -1,116 +1,170 @@
-# InterviewPrep.AI
+# ⚡ InterviewPrep.AI
 
-**AI-powered mock interview platform for technical professionals.**  
-Live resume parsing → adaptive AI questioning → real-time proctoring → structured feedback report.
+> AI-powered mock interview platform that reads your resume, asks questions tailored to *you*, monitors your focus, and delivers structured feedback — all in one session.
 
-🌐 **[prepai.thegauravthakur.in](https://prepai.thegauravthakur.in)** · [GitHub](https://github.com/2405Gaurav/prepgt)
-
----
-
-## What It Does
-
-- **AI-orchestrated interviews** — LangGraph manages the interview flow with context-aware follow-ups across technical and behavioral rounds
-- **Resume-aware questioning** — Gemini parses your resume and tailors questions to your actual experience and stack
-- **In-browser code editor** — Integrated IDE for DSA and system design rounds
-- **Fairness monitoring** — MediaPipe tracks attention and flags behavioral anomalies without interrupting the session
-- **Structured feedback** — AI-generated report with strengths, weaknesses, and an improvement roadmap
+🌐 **[prepai.thegauravthakur.in](https://prepai.thegauravthakur.in)** &nbsp;·&nbsp; [GitHub](https://github.com/2405Gaurav/prepgt)
 
 ---
 
-## Architecture
+## ✨ Features
+
+| | Feature | Description |
+|---|---|---|
+| 🧠 | **AI-Personalised Interviews** | Gemini reads your resume and crafts questions specific to your stack, experience level, and projects |
+| 🎙️ | **Voice + Code Responses** | Answer verbally via speech-to-text or through the built-in code editor for DSA rounds |
+| 👁️ | **Live Proctoring** | MediaPipe tracks face and attention — flags anomalies without interrupting your flow |
+| 📊 | **Structured Feedback** | Post-session report with strengths, weak areas, and a personalised improvement roadmap |
+| 🔁 | **Adaptive Follow-ups** | AI adjusts depth and difficulty in real time based on your answers |
+
+---
+
+## 🏗️ Architecture
 ```
-Frontend (React + Vite)
-        ↓
-Backend (Go REST API)
-        ↓
-LangGraph Interview Flow
-   ├── Resume Analysis
-   ├── Question Generation
-   ├── Answer Evaluation
-   ├── Follow-up Node
-   ├── Behavioral Assessment
-   └── Report Generation
-        ↓
-MongoDB · Gemini API · MediaPipe
+┌─────────────────────────────────────────────────┐
+│                React Frontend                   │
+│   Vite · TailwindCSS · Framer Motion · MediaPipe│
+└───────────────────┬─────────────────────────────┘
+                    │ REST
+┌───────────────────▼─────────────────────────────┐
+│              Go Backend (main.go)               │
+│   Controllers · Routes · Middleware · Services  │
+└──────┬────────────────────────────┬─────────────┘
+       │                            │
+┌──────▼──────┐            ┌────────▼────────┐
+│   MongoDB   │            │   Gemini API    │
+│  Sessions   │            │  Q&A · Feedback │
+│  Questions  │            │  Resume Parsing │
+└─────────────┘            └─────────────────┘
 ```
 
 ---
 
-## Tech Stack
-
-| Layer | Technologies |
-|---|---|
-| Frontend | React, Vite, TailwindCSS, Framer Motion, MediaPipe |
-| Backend | Go, REST APIs, MongoDB |
-| AI | LangChain, LangGraph, Google Gemini API |
-| Deployment | Vercel (frontend), Render (backend) |
-
----
-
-## Project Structure
+## 🗂️ Project Structure
 ```
 prepgt/
-├── client/
+│
+├── client/                          # React frontend
+│   ├── public/
+│   │   └── mediapipe/               # MediaPipe WASM assets
 │   └── src/
 │       ├── components/
+│       │   ├── Camera/              # MediaPipe face tracking
+│       │   ├── Interview/           # Core interview UI
+│       │   ├── MicroPhone/          # Speech-to-text
+│       │   ├── Speaker/             # TTS playback
+│       │   └── Ide/                 # In-browser code editor
 │       ├── pages/
+│       │   ├── Home/
+│       │   ├── Details/             # Resume upload + user info
+│       │   ├── Interview/
+│       │   └── Report/              # Post-session feedback
 │       ├── hooks/
 │       └── lib/
-└── server/
-    ├── controllers/
-    ├── routes/
-    ├── models/
-    ├── langchain/
-    ├── graph/
-    └── main.go
+│
+└── server/                          # Go backend
+    ├── main.go
+    ├── controllers/                 # Request handlers
+    ├── routes/                      # API route definitions
+    ├── models/                      # MongoDB schemas
+    ├── middleware/                  # CORS, auth, logging
+    ├── services/                    # Gemini integration
+    ├── db/                          # MongoDB connection
+    └── utils/                       # Helpers
 ```
 
 ---
 
-## Local Setup
+## 🧩 Tech Stack
 
-**Prerequisites:** Node.js v20+, Go 1.20+, MongoDB, Gemini API Key
+### Frontend
+- ⚛️ **React** + **Vite** — fast dev + optimised builds
+- 🎨 **TailwindCSS** + **Framer Motion** — UI and animations
+- 🎤 **Web Speech API** — browser-native speech-to-text
+- 👁️ **MediaPipe** — real-time face mesh and attention tracking
+- 🖥️ **Monaco-style IDE** — in-browser code editor
+
+### Backend
+- 🐹 **Go (Golang)** — high-performance REST API
+- 🍃 **MongoDB** — session and question persistence
+- 🔐 **JWT** — stateless authentication *(coming soon)*
+- 🤖 **Google Gemini API** — resume parsing, Q&A generation, feedback
+
+---
+
+## 🚀 Local Setup
+
+**Prerequisites:** Node.js v20+, Go 1.21+, MongoDB, Gemini API Key
 ```bash
-# Clone
+# 1. Clone
 git clone https://github.com/2405Gaurav/prepgt.git
 cd prepgt
 
-# Backend
+# 2. Backend
 cd server
-cp .env.example .env   # fill in your values
+cp .env.example .env        # fill in your values
 go run main.go
+# → API running at http://localhost:8080
 
-# Frontend
+# 3. Frontend (new terminal)
 cd ../client
 npm install
 npm run dev
-# → http://localhost:5173
+# → App running at http://localhost:5173
 ```
 
-**Backend `.env`**
-```
+### Backend `.env`
+```env
 PORT=8080
+GO_ENV=development
+
 MONGODB_URI=""
 DB_NAME=""
 SESSION_COLLECTION_NAME=""
 QUESTION_COLLECTION_NAME=""
+
 GEMINI_API_KEY=""
 FRONTEND_URL="http://localhost:5173"
 ```
 
+### Frontend `.env`
+```env
+VITE_SERVER=http://localhost:8080
+```
+
 ---
 
-## Roadmap
+## 🔐 Auth & Personalisation *(In Progress)*
 
-- [ ] Code execution sandbox
-- [ ] Multi-model support (GPT-4, Claude)
-- [ ] Adaptive learning paths
-- [ ] Skill gap analytics
-- [ ] Institution-level dashboard
+The platform is being upgraded from guest-only sessions to a full personalised experience:
+
+- **JWT-based authentication** — secure login with access + refresh tokens
+- **User profiles** — track your tech stack, experience level, and interview preferences
+- **Session history** — every interview stored, reviewable, and comparable over time
+- **Growth dashboard** — visualise your progress across multiple sessions with score trends
+- **Personalised difficulty** — AI adjusts question depth based on your historical performance
+- **Interview streaks & milestones** — gamified accountability to keep you consistent
+
+---
+
+## 📈 Roadmap
+
+### 🔜 Near-term
+- [ ] JWT auth + user accounts
+- [ ] Session history and progress tracking
+- [ ] Growth dashboard with score trends
+- [ ] Code execution sandbox (Judge0 integration)
+
+### 🔮 Long-term
+- [ ] Multi-model support (GPT-4o, Claude)
+- [ ] Peer mock interviews (P2P matchmaking)
+- [ ] Company-specific interview packs
 - [ ] Resume intelligence engine
+- [ ] Adaptive learning paths between sessions
+- [ ] Skill gap analytics + curriculum builder
+- [ ] Institution-level analytics dashboard
 
 ---
 
-## License
+## 📜 License
 
-MIT · Built by [Gaurav Thakur](https://github.com/2405Gaurav)
+MIT © [Gaurav Thakur](https://github.com/2405Gaurav)
