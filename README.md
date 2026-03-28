@@ -1,222 +1,95 @@
-# 🚀 InterviewPrep.AI – AI-Powered Technical Interview Ecosystem
+# InterviewPrep.AI
 
-## 🌐 Live Application  
-**Production URL:** https://prepgt.vercel.app  
-**GitHub Repository:** https://github.com/2405Gaurav/prepgt  
+**AI-powered mock interview platform for technical professionals.**  
+Live resume parsing → adaptive AI questioning → real-time proctoring → structured feedback report.
 
----
-
-# 🧠 PREPGT
-
-**PREPGT** is an advanced AI-driven mock interview platform built for technical professionals.  
-It combines LLM-based evaluation, structured interview orchestration using **LangGraph + LangChain**, in-browser coding, and behavioral monitoring to simulate real-world technical interviews.
-
-The long-term objective is to integrate PREPGT into a larger **AI-powered Education Ecosystem**, enabling adaptive learning, personalized skill benchmarking, and career readiness intelligence.
+🌐 **[prepai.thegauravthakur.in](https://prepai.thegauravthakur.in)** · [GitHub](https://github.com/2405Gaurav/prepgt)
 
 ---
 
-# 🏗️ System Architecture Overview
+## What It Does
 
-PREPGT follows a distributed AI architecture:
-
-- **Frontend** → React-based client with integrated IDE
-- **Backend** → Go microservice API layer
-- **LLM Orchestration** → LangChain + LangGraph
-- **Database** → MongoDB
-- **AI Models** → Gemini (evaluation & feedback generation)
-- **Monitoring Layer** → MediaPipe fairness detection
-- **Deployment** → Vercel (Frontend) + Custom Backend Hosting
+- **AI-orchestrated interviews** — LangGraph manages the interview flow with context-aware follow-ups across technical and behavioral rounds
+- **Resume-aware questioning** — Gemini parses your resume and tailors questions to your actual experience and stack
+- **In-browser code editor** — Integrated IDE for DSA and system design rounds
+- **Fairness monitoring** — MediaPipe tracks attention and flags behavioral anomalies without interrupting the session
+- **Structured feedback** — AI-generated report with strengths, weaknesses, and an improvement roadmap
 
 ---
 
-# 🗂️ Repository Structure
-
+## Architecture
 ```
-.
-└── prepgt/
-    ├── client/
-    │   ├── public/
-    │   │   └── mediapipe/
-    │   ├── src/
-    │   │   ├── assets/
-    │   │   ├── components/
-    │   │   ├── hooks/
-    │   │   ├── pages/
-    │   │   └── lib/
-    │   └── .env
-    │
-    └── server/
-        ├── controllers/
-        ├── db/
-        ├── models/
-        ├── routes/
-        ├── utils/
-        ├── middleware/
-        ├── services/
-        ├── langchain/
-        ├── graph/
-        ├── .env
-        └── main.go
+Frontend (React + Vite)
+        ↓
+Backend (Go REST API)
+        ↓
+LangGraph Interview Flow
+   ├── Resume Analysis
+   ├── Question Generation
+   ├── Answer Evaluation
+   ├── Follow-up Node
+   ├── Behavioral Assessment
+   └── Report Generation
+        ↓
+MongoDB · Gemini API · MediaPipe
 ```
 
 ---
 
-# ⚙️ Core Capabilities
+## Tech Stack
 
-## 1️⃣ AI-Orchestrated Mock Interviews
-
-- Structured interview flow managed using **LangGraph**
-- Modular prompt chains via **LangChain**
-- Context-aware follow-up questions
-- Multi-stage evaluation (technical + behavioral)
-
----
-
-## 2️⃣ In-Browser Technical IDE
-
-- Real-time coding interface
-- Supports algorithmic and system design tasks
-- Execution-ready architecture for future sandboxing
-- Designed for scalable language support
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, TailwindCSS, Framer Motion, MediaPipe |
+| Backend | Go, REST APIs, MongoDB |
+| AI | LangChain, LangGraph, Google Gemini API |
+| Deployment | Vercel (frontend), Render (backend) |
 
 ---
 
-## 3️⃣ LLM-Based Performance Intelligence
-
-- AI-generated structured feedback
-- Categorized strengths & weaknesses
-- Improvement roadmap generation
-- Technical depth analysis
-- Communication assessment
-
----
-
-## 4️⃣ Fairness & Attention Detection
-
-- Integrated **MediaPipe**
-- Face tracking & attention monitoring
-- Interview integrity enhancement
-- Non-invasive behavior analytics
-
----
-
-## 5️⃣ Modular AI Evaluation Pipeline
-
-Built using:
-
-- Prompt Templates
-- Retrieval-Augmented Context
-- Multi-node Graph Execution
-- State Management Across Interview Phases
-- Expandable Evaluation Agents
-
----
-
-# 🧩 Tech Stack
-
-## Frontend
-- React
-- Vite
-- TailwindCSS
-- MediaPipe
-- Framer Motion
-
-## Backend
-- Go (Golang)
-- REST APIs
-- MongoDB
-- JWT Authentication
-
-## AI Layer
-- LangChain
-- LangGraph
-- Google Gemini API
-- Custom Evaluation Chains
-
-## Deployment
-- Vercel (Frontend)
-- Scalable Backend Hosting
-- Environment-Based Configuration
-
----
-
-# 🔬 AI Workflow Design (LangGraph Driven)
-
-Interview execution follows a graph-based flow:
-
+## Project Structure
 ```
-Start
-  ↓
-Resume Analysis
-  ↓
-Technical Question Generation
-  ↓
-Answer Evaluation
-  ↓
-Follow-up Question Node
-  ↓
-Behavioral Assessment
-  ↓
-Report Generation
-  ↓
-End
+prepgt/
+├── client/
+│   └── src/
+│       ├── components/
+│       ├── pages/
+│       ├── hooks/
+│       └── lib/
+└── server/
+    ├── controllers/
+    ├── routes/
+    ├── models/
+    ├── langchain/
+    ├── graph/
+    └── main.go
 ```
 
-Each node:
-- Maintains structured state
-- Passes contextual memory
-- Generates deterministic evaluation outputs
-
-This architecture allows:
-- Future agent-based specialization
-- Multi-model orchestration
-- Integration with RAG systems
-
 ---
 
-# 📊 Future Expansion Roadmap
+## Local Setup
 
-PREPGT is architected as a foundational module of a broader **AI Education Ecosystem**, which aims to include:
-
-- 📚 Adaptive Learning Paths
-- 🧠 Skill Gap Analytics
-- 📈 Personalized Curriculum Builder
-- 🧪 AI-Based Project Evaluator
-- 🧾 Resume Intelligence Engine
-- 🔁 Continuous Competency Tracking
-- 🎓 Institution-Level Analytics Dashboard
-
-Long-term goal:
-Create a unified AI-powered education + interview readiness infrastructure.
-
----
-
-# 🛠️ Local Development Setup
-
-## Prerequisites
-
-- Node.js v20+
-- Go 1.20+
-- MongoDB
-- Gemini API Key
-
----
-
-## 1️⃣ Clone Repository
-
+**Prerequisites:** Node.js v20+, Go 1.20+, MongoDB, Gemini API Key
 ```bash
+# Clone
 git clone https://github.com/2405Gaurav/prepgt.git
 cd prepgt
+
+# Backend
+cd server
+cp .env.example .env   # fill in your values
+go run main.go
+
+# Frontend
+cd ../client
+npm install
+npm run dev
+# → http://localhost:5173
 ```
 
----
-
-## 2️⃣ Backend Configuration
-
-Create `.env` in `/server`:
-
+**Backend `.env`**
 ```
-PORT=
+PORT=8080
 MONGODB_URI=""
 DB_NAME=""
 SESSION_COLLECTION_NAME=""
@@ -225,73 +98,19 @@ GEMINI_API_KEY=""
 FRONTEND_URL="http://localhost:5173"
 ```
 
-Run backend:
+---
 
-```bash
-cd server
-go run main.go
-```
+## Roadmap
 
-Optional (with hot reload):
-
-```bash
-nodemon --exec go run main.go --signal SIGTERM
-```
+- [ ] Code execution sandbox
+- [ ] Multi-model support (GPT-4, Claude)
+- [ ] Adaptive learning paths
+- [ ] Skill gap analytics
+- [ ] Institution-level dashboard
+- [ ] Resume intelligence engine
 
 ---
 
-## 3️⃣ Frontend Setup
+## License
 
-```bash
-cd ../client
-npm install
-npm run dev
-```
-
-Access locally:
-
-```
-http://localhost:5173
-```
-
----
-
-# 🔐 Security & Scalability Considerations
-
-- Environment-based configuration
-- Secure API key handling
-- Stateless backend design
-- Extensible AI pipeline
-- Modular evaluation components
-- Microservice-friendly structure
-
----
-
-# 📌 Project Vision
-
-PREPGT is not just a mock interview tool.
-
-It is an AI-first infrastructure layer for:
-- Skill validation
-- Structured evaluation
-- Career readiness measurement
-- Data-driven education systems
-
-The system is designed to evolve into a multi-agent educational intelligence platform powered by graph-based AI orchestration.
-
----
-
-# 📜 License
-
-MIT License
-
----
-
-# 👨‍💻 Author
-
-**Gaurav Thakur**  
-AI/ML Engineer | Backend Systems | AI Orchestration Architect  
-GitHub: https://github.com/2405Gaurav  
-Live: https://prepgt.vercel.app
-
----
+MIT · Built by [Gaurav Thakur](https://github.com/2405Gaurav)
